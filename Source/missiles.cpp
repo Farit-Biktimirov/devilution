@@ -272,11 +272,11 @@ int GetDirection8(int x1, int y1, int x2, int y2)
 		{ 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 		{ 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 	};
-	unsigned char trans[4][3] = { { 3, 4, 5 },
-		{ 3, 2, 1 },
-		{ 7, 0, 1 },
-		{ 7, 6, 5 } };
 	int mx, my, md;
+	ALIGN_BY_1 BYTE urtoll[] = { 3, 4, 5 },
+	ultolr[] = { 3, 2, 1 },
+	lrtoul[] = { 7, 6, 5 },
+	lltour[] = { 7, 0, 1 };
 
 	mx = abs(x2 - x1);
 	if (mx > 15)
@@ -287,13 +287,13 @@ int GetDirection8(int x1, int y1, int x2, int y2)
 	md = Dirs[my][mx];
 	if (x1 > x2) {
 		if (y1 > y2)
-			md = trans[0][md];
+			md = urtoll[md];
 		else
-			md = trans[1][md];
+			md = ultolr[md];
 	} else if (y1 > y2)
-		md = trans[3][md];
+		md = lrtoul[md];
 	else
-		md = trans[2][md];
+		md = lltour[md];
 	return md;
 }
 
@@ -2401,9 +2401,9 @@ void AddRportal(int mi, int sx, int sy, int dx, int dy, int midir, char mienemy,
 	missile[mi]._miy = sy;
 	missile[mi]._misx = sx;
 	missile[mi]._misy = sy;
+	missile[mi]._mirange = 100;
 	missile[mi]._miVar1 = 100 - missile[mi]._miAnimLen;
 	missile[mi]._miVar2 = 0;
-	missile[mi]._mirange = 100;
 	PutMissile(mi);
 }
 
@@ -2451,8 +2451,8 @@ int AddMissile(int sx, int sy, int dx, int dy, int midir, int mitype, char micas
 	missile[mi]._misource = id;
 	missile[mi]._miAnimType = missiledata[mitype].mFileNum;
 	missile[mi]._miDrawFlag = missiledata[mitype].mDraw;
-	missile[mi]._mimfnum = midir;
 	missile[mi]._mispllvl = spllvl;
+	missile[mi]._mimfnum = midir;
 
 	if (missile[mi]._miAnimType == 255 || misfiledata[missile[mi]._miAnimType].mAnimFAmt < 8)
 		SetMissDir(mi, 0);

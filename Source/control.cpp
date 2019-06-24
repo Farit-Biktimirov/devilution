@@ -1730,7 +1730,7 @@ void DrawChr()
 		mindam += plr[myplr]._pDamageMod;
 	}
 	maxdam = plr[myplr]._pIMaxDam;
-	maxdam +=  plr[myplr]._pIBonusDam * maxdam / 100;
+	maxdam += plr[myplr]._pIBonusDam * maxdam / 100;
 	maxdam += plr[myplr]._pIBonusDamMod;
 	if (plr[myplr].InvBody[INVLOC_HAND_LEFT]._itype == ITYPE_BOW) {
 		if (plr[myplr]._pClass == PC_ROGUE)
@@ -2397,9 +2397,9 @@ void control_remove_gold(int pnum, int gold_index)
 
 void control_set_gold_curs(int pnum)
 {
-	if (plr[pnum].HoldItem._ivalue >= 2500)
+	if (plr[pnum].HoldItem._ivalue >= GOLD_MEDIUM_LIMIT)
 		plr[pnum].HoldItem._iCurs = ICURS_GOLD_LARGE;
-	else if (plr[pnum].HoldItem._ivalue <= 1000)
+	else if (plr[pnum].HoldItem._ivalue <= GOLD_SMALL_LIMIT)
 		plr[pnum].HoldItem._iCurs = ICURS_GOLD_SMALL;
 	else
 		plr[pnum].HoldItem._iCurs = ICURS_GOLD_MEDIUM;

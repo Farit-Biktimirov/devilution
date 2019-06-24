@@ -12,16 +12,29 @@
 struct EXTERNMESSAGE {
 	LIST_LINK(EXTERNMESSAGE) m_Link;
 	char command[COMMAND_LEN];
-	~EXTERNMESSAGE()
+	void *operator new(size_t n, DWORD extralen, int flags)
 	{
-		// BUGFIX: this is already called by m_Link's destructor
-		m_Link.Unlink();
+		return SMemAlloc(n + extralen, (char *)OBJECT_NAME(EXTERNMESSAGE), SLOG_OBJECT, flags | (1 << 3));
 	}
-	static void operator delete(void *p) {
-		if (p)
-			SMemFree(p, "delete", SLOG_FUNCTION, 0);
+	void operator delete(void *address, DWORD extralen, int flags)
+	{
 	}
+	void operator delete(void *address)
+	{
+	}
+	void *Delete(DWORD flags);
 };
+
+void *EXTERNMESSAGE::Delete(DWORD flags)
+{
+	// BUGFIX: this is already called by m_Link's destructor
+	m_Link.Unlink();
+	this->~EXTERNMESSAGE();
+	if ((flags & 0x1) && this) {
+		SMemFree(this, "delete", SLOG_FUNCTION, 0);
+	}
+    return this;
+}
 
 static TList<EXTERNMESSAGE> sgChat_Cmd;
 

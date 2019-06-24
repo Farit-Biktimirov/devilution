@@ -28,20 +28,20 @@ void init_seed_desync()
 {
 	int i;
 
-	for(i = 0; i < 4096; i++) {
+	for (i = 0; i < 4096; i++) {
 		seed_table[i] = -1;
 	}
 
 	seed_index = 0;
 
-	for(i = 0; i < NUMLEVELS; i++) {
+	for (i = 0; i < NUMLEVELS; i++) {
 		level_seeds[i] = 0;
 	}
 }
 
 void seed_desync_index_get()
 {
-	if(currlevel == 0) {
+	if (currlevel == 0) {
 		return;
 	}
 
@@ -51,7 +51,7 @@ void seed_desync_index_get()
 
 void seed_desync_index_set()
 {
-	if(currlevel == 0) {
+	if (currlevel == 0) {
 		return;
 	}
 
@@ -61,13 +61,13 @@ void seed_desync_index_set()
 
 void seed_desync_check(int seed)
 {
-	if(!update_seed_check || seed_index == 4096 || currlevel == 0) {
+	if (!update_seed_check || seed_index == 4096 || currlevel == 0) {
 		return;
 	}
 
-	if(seed_table[seed_index] == -1) {
+	if (seed_table[seed_index] == -1) {
 		seed_table[seed_index] = seed;
-	} else if(seed != seed_table[seed_index]) {
+	} else if (seed != seed_table[seed_index]) {
 		app_fatal("Seeds desynced");
 	}
 
@@ -102,9 +102,9 @@ void GiveGoldCheat()
 			ni = plr[myplr]._pNumInv++;
 			SetPlrHandItem(&plr[myplr].InvList[ni], IDI_GOLD);
 			GetPlrHandSeed(&plr[myplr].InvList[ni]);
-			plr[myplr].InvList[ni]._ivalue = 5000;
+			plr[myplr].InvList[ni]._ivalue = GOLD_MAX_LIMIT;
 			plr[myplr].InvList[ni]._iCurs = 6;
-			plr[myplr]._pGold += 5000;
+			plr[myplr]._pGold += GOLD_MAX_LIMIT;
 			plr[myplr].InvGrid[i] = plr[myplr]._pNumInv;
 		}
 	}
@@ -220,7 +220,7 @@ void PrintDebugQuest()
 
 	sprintf(dstr, "Quest %i :  Active = %i, Var1 = %i", dbgqst, quests[dbgqst]._qactive, quests[dbgqst]._qvar1);
 	NetSendCmdString(1 << myplr, dstr);
-	
+
 	dbgqst++;
 	if (dbgqst == MAXQUESTS)
 		dbgqst = 0;
@@ -229,8 +229,8 @@ void PrintDebugQuest()
 void PrintDebugMonster(int m)
 {
 	BOOL bActive;
-	int i;          
-	char dstr[128]; 
+	int i;
+	char dstr[128];
 
 	sprintf(dstr, "Monster %i = %s", m, monster[m].mName);
 	NetSendCmdString(1 << myplr, dstr);

@@ -655,7 +655,7 @@ void NetSendCmdGolem(BYTE mx, BYTE my, BYTE dir, BYTE menemy, int hp, BYTE cl)
 
 void NetSendCmdLoc(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y)
 {
-	TCmdLoc cmd;
+	ALIGN_BY_1 TCmdLoc cmd;
 
 	cmd.bCmd = bCmd;
 	cmd.x = x;
@@ -713,7 +713,7 @@ void NetSendCmdLocParam3(BOOL bHiPri, BYTE bCmd, BYTE x, BYTE y, WORD wParam1, W
 
 void NetSendCmdParam1(BOOL bHiPri, BYTE bCmd, WORD wParam1)
 {
-	TCmdParam1 cmd;
+	ALIGN_BY_1 TCmdParam1 cmd;
 
 	cmd.bCmd = bCmd;
 	cmd.wParam1 = wParam1;
@@ -1476,37 +1476,39 @@ BOOL delta_get_item(TCmdGItem *pI, BYTE bLevel)
 	BOOL result;
 	TCmdPItem *pD;
 	int i;
+	BOOL found;
 
+	result = TRUE;
+	found = FALSE;
 	if (gbMaxPlayers != 1) {
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (*(BYTE *)pD != 0xFF
-			    && pD->wIndx == pI->wIndx
-			    && pD->wCI == pI->wCI
-			    && pD->dwSeed == pI->dwSeed) {
-				if (pD->bCmd == CMD_STAND) {
-					sgbDeltaChanged = 1;
-					pD->bCmd = CMD_WALKXY;
-					return TRUE;
-				} else if (pD->bCmd == CMD_WALKXY) {
-					return TRUE;
-				} else if (pD->bCmd == CMD_ACK_PLRINFO) {
-					*(BYTE *)pD = 0xFF;
-					sgbDeltaChanged = 1;
-					return TRUE;
-				} else {
-					app_fatal("delta:1");
-				}
-				return result;
+		pD = sgLevels[bLevel].item;
+		for (i = 0; i < MAXITEMS; i++, pD++) {
+			if (pD->bCmd != 0xFF && pD->wIndx == pI->wIndx && pD->wCI == pI->wCI && pD->dwSeed == pI->dwSeed) {
+				found = TRUE;
+				break;
 			}
 		}
-
+		if (found) {
+			if (pD->bCmd == CMD_WALKXY) {
+				return result;
+			}
+			if (pD->bCmd == CMD_STAND) {
+				sgbDeltaChanged = 1;
+				pD->bCmd = CMD_WALKXY;
+				return result;
+			}
+			if (pD->bCmd == CMD_ACK_PLRINFO) {
+				pD->bCmd = 0xFF;
+				sgbDeltaChanged = 1;
+				return result;
+			}
+			app_fatal("delta:1");
+		}
 		if (((pI->wCI >> 8) & 0x80) == 0)
 			return FALSE;
-
-		for (i = 0; i < MAXITEMS; i++) {
-			pD = &sgLevels[bLevel].item[i];
-			if (*(BYTE *)pD == 0xFF) {
+		pD = sgLevels[bLevel].item;
+		for (i = 0; i < MAXITEMS; i++, pD++) {
+			if (pD->bCmd == 0xFF) {
 				sgbDeltaChanged = 1;
 				pD->bCmd = CMD_WALKXY;
 				pD->x = pI->x;
@@ -1521,11 +1523,12 @@ BOOL delta_get_item(TCmdGItem *pI, BYTE bLevel)
 				pD->bMCh = pI->bMCh;
 				pD->wValue = pI->wValue;
 				pD->dwBuff = pI->dwBuff;
-				return TRUE;
+				result = TRUE;
+				break;
 			}
 		}
 	}
-	return TRUE;
+	return result;
 }
 // 679660: using guessed type char gbMaxPlayers;
 
