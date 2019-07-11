@@ -13,7 +13,7 @@ BYTE *option_cel;
 BYTE *sgpLogo;
 int sgCurrentMenuIdx;
 
-const unsigned char lfontframe[127] = {
+const BYTE lfontframe[127] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -28,7 +28,7 @@ const unsigned char lfontframe[127] = {
 	14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 	24, 25, 26, 20, 0, 21, 0
 };
-const unsigned char lfontkern[56] = {
+const BYTE lfontkern[56] = {
 	18, 33, 21, 26, 28, 19, 19, 26, 25, 11,
 	12, 25, 19, 34, 28, 32, 20, 32, 28, 20,
 	28, 36, 35, 46, 33, 33, 24, 11, 23, 22,
@@ -77,11 +77,11 @@ void gmenu_init_menu()
 	dword_63447C = 0;
 	sgCurrentMenuIdx = 0;
 	mouseNavigation = FALSE;
-	sgpLogo = LoadFileInMem("Data\\Diabsmal.CEL", 0);
-	BigTGold_cel = LoadFileInMem("Data\\BigTGold.CEL", 0);
-	PentSpin_cel = LoadFileInMem("Data\\PentSpin.CEL", 0);
-	option_cel = LoadFileInMem("Data\\option.CEL", 0);
-	optbar_cel = LoadFileInMem("Data\\optbar.CEL", 0);
+	sgpLogo = LoadFileInMem("Data\\Diabsmal.CEL", NULL);
+	BigTGold_cel = LoadFileInMem("Data\\BigTGold.CEL", NULL);
+	PentSpin_cel = LoadFileInMem("Data\\PentSpin.CEL", NULL);
+	option_cel = LoadFileInMem("Data\\option.CEL", NULL);
+	optbar_cel = LoadFileInMem("Data\\optbar.CEL", NULL);
 }
 
 BOOL gmenu_exception()
@@ -173,18 +173,18 @@ void gmenu_draw()
 
 void gmenu_draw_menu_item(TMenuItem *pItem, int y)
 {
-	DWORD x, w, nSteps, step, pos;
-
+	DWORD x, w, nSteps, step, pos, t;
+	t = y - 2;
 	w = gmenu_get_lfont(pItem);
 	if (pItem->dwFlags & GMENU_SLIDER) {
 		x = 16 + w / 2 + SCREEN_X;
-		CelDecodeOnly(x, y - 10, optbar_cel, 1, 287);
+		CelDecodeOnly(x, t - 8, optbar_cel, 1, 287);
+		step = pItem->dwFlags & 0xFFF;
 		nSteps = (pItem->dwFlags & 0xFFF000) >> 12;
 		if (nSteps < 2)
 			nSteps = 2;
-		step = pItem->dwFlags & 0xFFF;
 		pos = step * 256 / nSteps;
-		gmenu_clear_buffer(x + 2, y - 12, pos + 13, 28);
+		gmenu_clear_buffer(x + 2, t - 10, pos + 13, 28);
 		CelDecodeOnly(x + 2 + pos, y - 12, option_cel, 1, 27);
 	}
 	x = SCREEN_WIDTH / 2 - w / 2 + SCREEN_X;
