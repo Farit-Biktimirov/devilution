@@ -6,7 +6,7 @@ int stextlhold;
 ItemStruct boyitem;
 int stextshold;
 ItemStruct premiumitem[6];
-void *pSTextBoxCels;
+BYTE *pSTextBoxCels;
 int premiumlevel;
 int talker;
 STextStruct stext[24];
@@ -21,12 +21,12 @@ int numpremium;
 ItemStruct healitem[20];
 ItemStruct golditem;
 char storehidx[48];
-void *pSTextSlidCels;
+BYTE *pSTextSlidCels;
 int stextvhold;
 int stextsel;
 char stextscrldbtn;
 int gossipend;
-BYTE *pCelBuff;
+BYTE *pSPentSpn2Cels;
 int stextsval;
 int boylevel;
 ItemStruct smithitem[20];
@@ -77,7 +77,7 @@ void InitStores()
 	int i;
 
 	pSTextBoxCels = LoadFileInMem("Data\\TextBox2.CEL", NULL);
-	pCelBuff = LoadFileInMem("Data\\PentSpn2.CEL", NULL);
+	pSPentSpn2Cels = LoadFileInMem("Data\\PentSpn2.CEL", NULL);
 	pSTextSlidCels = LoadFileInMem("Data\\TextSlid.CEL", NULL);
 	ClearSText(0, 24);
 	stextflag = STORE_NONE;
@@ -124,13 +124,13 @@ void SetupTownStores()
 void FreeStoreMem()
 {
 	MemFreeDbg(pSTextBoxCels);
-	MemFreeDbg(pCelBuff);
+	MemFreeDbg(pSPentSpn2Cels);
 	MemFreeDbg(pSTextSlidCels);
 }
 
 void DrawSTextBack()
 {
-	CelDecodeOnly(408, 487, (BYTE *)pSTextBoxCels, 1, 271);
+	CelDecodeOnly(408, 487, pSTextBoxCels, 1, 271);
 
 #define TRANS_RECT_X 347
 #define TRANS_RECT_Y 28
@@ -167,7 +167,7 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 		off += k;
 	}
 	if (stextsel == y) {
-		CelDecodeOnly(cjustflag ? xx + x + k - 20 : xx + x - 20, s + 205, pCelBuff, InStoreFlag, 12);
+		CelDecodeOnly(cjustflag ? xx + x + k - 20 : xx + x - 20, s + 205, pSPentSpn2Cels, InStoreFlag, 12);
 	}
 	for (i = 0; i < len; i++) {
 		c = fontframe[gbFontTransTbl[(BYTE)str[i]]];
@@ -189,7 +189,7 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 		}
 	}
 	if (stextsel == y) {
-		CelDecodeOnly(cjustflag ? xx + x + k + 4 : 660 - x, s + 205, pCelBuff, InStoreFlag, 12);
+		CelDecodeOnly(cjustflag ? xx + x + k + 4 : 660 - x, s + 205, pSPentSpn2Cels, InStoreFlag, 12);
 	}
 }
 
@@ -247,16 +247,16 @@ void DrawSArrows(int y1, int y2)
 	yd1 = SStringY[y1] + 204;
 	yd2 = SStringY[y2] + 204;
 	if (stextscrlubtn != -1)
-		CelDecodeOnly(665, yd1, (BYTE *)pSTextSlidCels, 12, 12);
+		CelDecodeOnly(665, yd1, pSTextSlidCels, 12, 12);
 	else
-		CelDecodeOnly(665, yd1, (BYTE *)pSTextSlidCels, 10, 12);
+		CelDecodeOnly(665, yd1, pSTextSlidCels, 10, 12);
 	if (stextscrldbtn != -1)
-		CelDecodeOnly(665, yd2, (BYTE *)pSTextSlidCels, 11, 12);
+		CelDecodeOnly(665, yd2, pSTextSlidCels, 11, 12);
 	else
-		CelDecodeOnly(665, yd2, (BYTE *)pSTextSlidCels, 9, 12);
+		CelDecodeOnly(665, yd2, pSTextSlidCels, 9, 12);
 	yd1 += 12;
 	for (yd3 = yd1; yd3 < yd2; yd3 += 12) {
-		CelDecodeOnly(665, yd3, (BYTE *)pSTextSlidCels, 14, 12);
+		CelDecodeOnly(665, yd3, pSTextSlidCels, 14, 12);
 	}
 	if (stextsel == 22)
 		yd3 = stextlhold;
@@ -266,7 +266,7 @@ void DrawSArrows(int y1, int y2)
 		yd3 = 1000 * (stextsval + ((yd3 - stextup) >> 2)) / (storenumh - 1) * (SStringY[y2] - SStringY[y1] - 24) / 1000;
 	else
 		yd3 = 0;
-	CelDecodeOnly(665, SStringY[y1 + 1] + 204 + yd3, (BYTE *)pSTextSlidCels, 13, 12);
+	CelDecodeOnly(665, SStringY[y1 + 1] + 204 + yd3, pSTextSlidCels, 13, 12);
 }
 
 void DrawSTextHelp()
@@ -1432,9 +1432,9 @@ void StartStore(char s)
 	int i;
 
 	for (t = s;; t = STORE_SMITH) {
-		sbookflag = 0;
+		sbookflag = FALSE;
 		invflag = 0;
-		chrflag = 0;
+		chrflag = FALSE;
 		questlog = FALSE;
 		dropGoldFlag = FALSE;
 		ClearSText(0, 24);
