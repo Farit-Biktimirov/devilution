@@ -11,7 +11,7 @@ int WaterDone;
 int ReturnLvlY;
 int ReturnLvlX;
 int ReturnLvlT;
-int ALLQUESTS;
+int ALLQUESTS; /** current frame # for the pentagram selector */
 int ReturnLvl;
 
 QuestData questlist[MAXQUESTS] = {
@@ -32,7 +32,7 @@ QuestData questlist[MAXQUESTS] = {
 	{       3,          3, DTYPE_CATHEDRAL, QTYPE_KING,   100,      1,       1, QUEST_KING2,    "The Curse of King Leoric" },
 	{       2,         -1, DTYPE_CAVES,     QTYPE_PW,     100,      4,       0, QUEST_POISON3,  "Poisoned Water Supply"    },
 	{       6,         -1, DTYPE_CATACOMBS, QTYPE_BONE,   100,      2,       0, QUEST_BONER,    "The Chamber of Bone"      },
-	{      15,         15, DTYPE_CATHEDRAL, QTYPE_VB,     100,      5,       1, QUEST_VILE1,    "Archbishop Lazarus"       }
+	{      15,         15, DTYPE_CATHEDRAL, QTYPE_VB,     100,      5,       1, QUEST_VILE1,    "Archbishop Lazarus"       },
 	// clang-format on
 };
 char questxoff[7] = { 0, -1, 0, -1, -2, -1, -2 };
@@ -66,10 +66,10 @@ void InitQuests()
 		}
 	}
 
-	initiatedQuests = 0;
 	questlog = FALSE;
 	ALLQUESTS = 1;
 	WaterDone = 0;
+	initiatedQuests = 0;
 
 	for (z = 0; z < MAXQUESTS; z++) {
 		if (gbMaxPlayers <= 1 || questlist[z]._qflags & 1) {
@@ -89,11 +89,11 @@ void InitQuests()
 				quests[z]._qlog = 0;
 			}
 
-			quests[z]._qtx = 0;
 			quests[z]._qslvl = questlist[z]._qslvl;
+			quests[z]._qtx = 0;
+			quests[z]._qty = 0;
 			quests[z]._qidx = z;
 			quests[z]._qlvltype = questlist[z]._qlvlt;
-			quests[z]._qty = 0;
 			quests[z]._qvar2 = 0;
 			quests[z]._qmsg = questlist[z]._qdmsg;
 		}
@@ -101,15 +101,15 @@ void InitQuests()
 
 	if (gbMaxPlayers == 1) {
 		SetRndSeed(glSeedTbl[15]);
-		if (random(0, 2))
+		if (random_(0, 2))
 			quests[QTYPE_PW]._qactive = 0;
 		else
 			quests[QTYPE_KING]._qactive = 0;
 
-		quests[QuestGroup1[random(0, sizeof(QuestGroup1) / sizeof(int))]]._qactive = 0;
-		quests[QuestGroup2[random(0, sizeof(QuestGroup2) / sizeof(int))]]._qactive = 0;
-		quests[QuestGroup3[random(0, sizeof(QuestGroup3) / sizeof(int))]]._qactive = 0;
-		quests[QuestGroup4[random(0, sizeof(QuestGroup4) / sizeof(int))]]._qactive = 0;
+		quests[QuestGroup1[random_(0, sizeof(QuestGroup1) / sizeof(int))]]._qactive = 0;
+		quests[QuestGroup2[random_(0, sizeof(QuestGroup2) / sizeof(int))]]._qactive = 0;
+		quests[QuestGroup3[random_(0, sizeof(QuestGroup3) / sizeof(int))]]._qactive = 0;
+		quests[QuestGroup4[random_(0, sizeof(QuestGroup4) / sizeof(int))]]._qactive = 0;
 	}
 #ifdef _DEBUG
 	if (questdebug != -1)
@@ -304,12 +304,12 @@ void CheckQuestKill(int m, BOOL sendmsg)
 		sfxdelay = 30;
 		quests[QTYPE_MOD]._qactive = 2;
 
-		for (j = 0; j < 112; j++) {
-			for (i = 0; i < 112; i++) {
+		for (j = 0; j < MAXDUNY; j++) {
+			for (i = 0; i < MAXDUNX; i++) {
 				if (dPiece[i][j] == 370) {
 					trigs[numtrigs]._tx = i;
 					trigs[numtrigs]._ty = j;
-					trigs[numtrigs]._tmsg = 1026;
+					trigs[numtrigs]._tmsg = WM_DIABNEXTLVL;
 					numtrigs++;
 				}
 			}
@@ -551,26 +551,26 @@ void SetReturnLvlPos()
 	case SL_SKELKING:
 		ReturnLvlX = quests[QTYPE_KING]._qtx + 1;
 		ReturnLvlY = quests[QTYPE_KING]._qty;
-		ReturnLvlT = DTYPE_CATHEDRAL;
 		ReturnLvl = quests[QTYPE_KING]._qlevel;
+		ReturnLvlT = DTYPE_CATHEDRAL;
 		break;
 	case SL_BONECHAMB:
 		ReturnLvlX = quests[QTYPE_BONE]._qtx + 1;
 		ReturnLvlY = quests[QTYPE_BONE]._qty;
-		ReturnLvlT = DTYPE_CATACOMBS;
 		ReturnLvl = quests[QTYPE_BONE]._qlevel;
+		ReturnLvlT = DTYPE_CATACOMBS;
 		break;
 	case SL_POISONWATER:
 		ReturnLvlX = quests[QTYPE_PW]._qtx;
 		ReturnLvlY = quests[QTYPE_PW]._qty + 1;
-		ReturnLvlT = DTYPE_CATHEDRAL;
 		ReturnLvl = quests[QTYPE_PW]._qlevel;
+		ReturnLvlT = DTYPE_CATHEDRAL;
 		break;
 	case SL_VILEBETRAYER:
 		ReturnLvlX = quests[QTYPE_VB]._qtx + 1;
 		ReturnLvlY = quests[QTYPE_VB]._qty - 1;
-		ReturnLvlT = DTYPE_HELL;
 		ReturnLvl = quests[QTYPE_VB]._qlevel;
+		ReturnLvlT = DTYPE_HELL;
 		break;
 	}
 }
@@ -659,17 +659,17 @@ void ResyncQuests()
 		}
 	}
 	if (currlevel == quests[QTYPE_BLKM]._qlevel) {
-		if (quests[QTYPE_BLKM]._qactive == 1) {
-			if (!quests[QTYPE_BLKM]._qvar1) {
-				SpawnQuestItem(IDI_FUNGALTM, 0, 0, 5, 1);
-				quests[QTYPE_BLKM]._qvar1 = QS_TOMESPAWNED;
-			}
-		} else if (quests[QTYPE_BLKM]._qactive == 2) {
-			if (quests[QTYPE_BLKM]._qvar1 >= QS_MUSHGIVEN) {
-				Qtalklist[TOWN_WITCH]._qblkm = -1;
-				Qtalklist[TOWN_HEALER]._qblkm = QUEST_MUSH3;
-			} else if (quests[QTYPE_BLKM]._qvar1 >= QS_BRAINGIVEN) {
-				Qtalklist[TOWN_HEALER]._qblkm = -1;
+		if (quests[QTYPE_BLKM]._qactive == 1 && !quests[QTYPE_BLKM]._qvar1) {
+			SpawnQuestItem(IDI_FUNGALTM, 0, 0, 5, 1);
+			quests[QTYPE_BLKM]._qvar1 = QS_TOMESPAWNED;
+		} else {
+			if (quests[QTYPE_BLKM]._qactive == 2) {
+				if (quests[QTYPE_BLKM]._qvar1 >= QS_MUSHGIVEN) {
+					Qtalklist[TOWN_WITCH]._qblkm = -1;
+					Qtalklist[TOWN_HEALER]._qblkm = QUEST_MUSH3;
+				} else if (quests[QTYPE_BLKM]._qvar1 >= QS_BRAINGIVEN) {
+					Qtalklist[TOWN_HEALER]._qblkm = -1;
+				}
 			}
 		}
 	}
@@ -714,7 +714,7 @@ void PrintQLString(int x, int y, BOOL cjustflag, char *str, int col)
 		off += k;
 	}
 	if (qline == y) {
-		CelDecodeOnly(cjustflag ? x + k + 76 : x + 76, s + 205, pSPentSpn2Cels, ALLQUESTS, 12);
+		CelDraw(cjustflag ? x + k + 76 : x + 76, s + 205, pSPentSpn2Cels, ALLQUESTS, 12);
 	}
 	for (i = 0; i < len; i++) {
 		c = fontframe[gbFontTransTbl[(BYTE)str[i]]];
@@ -725,7 +725,7 @@ void PrintQLString(int x, int y, BOOL cjustflag, char *str, int col)
 		off += fontkern[c] + 1;
 	}
 	if (qline == y) {
-		CelDecodeOnly(cjustflag ? x + k + 100 : 340 - x, s + 205, pSPentSpn2Cels, ALLQUESTS, 12);
+		CelDraw(cjustflag ? x + k + 100 : 340 - x, s + 205, pSPentSpn2Cels, ALLQUESTS, 12);
 	}
 }
 
@@ -734,7 +734,7 @@ void DrawQuestLog()
 	int y, i;
 
 	PrintQLString(0, 2, TRUE, "Quest Log", 3);
-	CelDecodeOnly(64, 511, pQLogCel, 1, 320);
+	CelDraw(64, 511, pQLogCel, 1, 320);
 	y = qtopline;
 	for (i = 0; i < numqlines; i++) {
 		PrintQLString(0, y, TRUE, questlist[qlist[i]]._qlstr, 0);

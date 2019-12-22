@@ -53,7 +53,7 @@ TMegaPkt *msg_get_next_packet()
 {
 	TMegaPkt *result;
 
-	sgpCurrPkt = (TMegaPkt *)DiabloAllocPtr(32008);
+	sgpCurrPkt = (TMegaPkt *)DiabloAllocPtr(sizeof(TMegaPkt));
 	sgpCurrPkt->pNext = NULL;
 	sgpCurrPkt->dwSpaceLeft = 32000;
 
@@ -109,7 +109,7 @@ void msg_free_packets()
 
 int msg_wait_for_turns()
 {
-	int received;
+	BOOL received;
 	DWORD turns;
 
 	if (!sgbDeltaChunks) {
@@ -577,7 +577,7 @@ void DeltaLoadLevel()
 				item[ii]._ix = x;
 				item[ii]._iy = y;
 				dItem[x][y] = ii + 1;
-				RespawnItem(ii, 0);
+				RespawnItem(ii, FALSE);
 				numitems++;
 			}
 		}
@@ -1257,13 +1257,13 @@ void DeltaImportJunk(BYTE *src)
 		if (*src == 0xFF) {
 			memset(&sgJunk.portal[i], 0xFF, sizeof(DPortal));
 			src++;
-			SetPortalStats(i, 0, 0, 0, 0, 0);
+			SetPortalStats(i, FALSE, 0, 0, 0, 0);
 		} else {
 			memcpy(&sgJunk.portal[i], src, sizeof(DPortal));
 			src += sizeof(DPortal);
 			SetPortalStats(
 			    i,
-			    1,
+			    TRUE,
 			    sgJunk.portal[i].x,
 			    sgJunk.portal[i].y,
 			    sgJunk.portal[i].level,
@@ -1662,7 +1662,7 @@ void delta_put_item(TCmdPItem *pI, int x, int y, BYTE bLevel)
 void check_update_plr(int pnum)
 {
 	if (gbMaxPlayers != 1 && pnum == myplr)
-		pfile_update(1);
+		pfile_update(TRUE);
 }
 
 DWORD On_SYNCPUTITEM(TCmd *pCmd, int pnum)
@@ -1695,8 +1695,9 @@ DWORD On_RESPAWNITEM(TCmd *pCmd, int pnum)
 	if (gbBufferMsgs == 1)
 		msg_send_packet(pnum, p, sizeof(*p));
 	else {
-		if (currlevel == plr[pnum].plrlevel && pnum != myplr)
+		if (currlevel == plr[pnum].plrlevel && pnum != myplr) {
 			SyncPutItem(pnum, p->x, p->y, p->wIndx, p->wCI, p->dwSeed, p->bId, p->bDur, p->bMDur, p->bCh, p->bMCh, p->wValue, p->dwBuff);
+		}
 		PutItemRecord(p->dwSeed, p->wCI, p->wIndx);
 		delta_put_item(p, p->x, p->y, plr[pnum].plrlevel);
 	}
@@ -1848,7 +1849,7 @@ DWORD On_OPOBJT(TCmd *pCmd, int pnum)
 
 	if (gbBufferMsgs != 1 && currlevel == plr[pnum].plrlevel) {
 		plr[pnum].destAction = ACTION_OPERATETK;
-		plr[pnum].destParam1 =p->wParam1;
+		plr[pnum].destParam1 = p->wParam1;
 	}
 
 	return sizeof(*p);

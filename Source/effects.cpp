@@ -981,7 +981,7 @@ void PlayEffect(int i, int mode)
 		return;
 	}
 
-	sndIdx = random(164, 2);
+	sndIdx = random_(164, 2);
 	if (!gbSndInited || !gbSoundOn || gbBufferMsgs) {
 		return;
 	}
@@ -1026,7 +1026,7 @@ BOOL calc_snd_position(int x, int y, int *plVolume, int *plPan)
 void PlaySFX(int psfx)
 {
 	psfx = RndSFX(psfx);
-	PlaySFX_priv(&sgSFX[psfx], 0, 0, 0);
+	PlaySFX_priv(&sgSFX[psfx], FALSE, 0, 0);
 }
 
 void PlaySFX_priv(TSFX *pSFX, BOOL loc, int x, int y)
@@ -1125,7 +1125,7 @@ int RndSFX(int psfx)
 #endif
 	else
 		return psfx;
-	return psfx + random(165, nRand);
+	return psfx + random_(165, nRand);
 }
 
 void PlaySfxLoc(int psfx, int x, int y)
@@ -1140,7 +1140,7 @@ void PlaySfxLoc(int psfx, int x, int y)
 			pSnd->start_tc = 0;
 	}
 
-	PlaySFX_priv(&sgSFX[psfx], 1, x, y);
+	PlaySFX_priv(&sgSFX[psfx], TRUE, x, y);
 }
 
 void FreeMonsterSnd()

@@ -146,7 +146,7 @@ void mpqapi_remove_hash_entry(const char *pszName)
 		block_size = blockEntry->sizealloc;
 		memset(blockEntry, 0, sizeof(*blockEntry));
 		mpqapi_alloc_block(block_offset, block_size);
-		save_archive_modified = 1;
+		save_archive_modified = TRUE;
 	}
 }
 
@@ -266,17 +266,12 @@ _BLOCKENTRY *mpqapi_add_file(const char *pszName, _BLOCKENTRY *pBlk, int block_i
 	h3 = Hash(pszName, 2);
 	if (mpqapi_get_hash_index(h1, h2, h3, 0) != -1)
 		app_fatal("Hash collision between \"%s\" and existing file\n", pszName);
-	i = 2048;
 	hIdx = h1 & 0x7FF;
-	while (1) {
-		i--;
+	i = 2048;
+	while (i--) {
 		if (sgpHashTbl[hIdx].block == -1 || sgpHashTbl[hIdx].block == -2)
 			break;
 		hIdx = (hIdx + 1) & 0x7FF;
-		if (!i) {
-			i = -1;
-			break;
-		}
 	}
 	if (i < 0)
 		app_fatal("Out of hash space");
@@ -518,7 +513,7 @@ BOOL ParseMPQHeader(_FILEHEADER *pHdr, DWORD *pdwNextFileStart)
 		pHdr->version = 0;
 		*pdwNextFileStart = 0x10068;
 		save_archive_modified = TRUE;
-		save_archive_open = 1;
+		save_archive_open = TRUE;
 	}
 
 	return TRUE;

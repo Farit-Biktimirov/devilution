@@ -97,7 +97,7 @@ void GiveGoldCheat()
 {
 	int i, ni;
 
-	for (i = 0; i < 40; i++) {
+	for (i = 0; i < NUM_INV_GRID_ELEM; i++) {
 		if (!plr[myplr].InvGrid[i]) {
 			ni = plr[myplr]._pNumInv++;
 			SetPlrHandItem(&plr[myplr].InvList[ni], IDI_GOLD);
@@ -116,7 +116,7 @@ void StoresCheat()
 
 	numpremium = 0;
 
-	for (i = 0; i < 6; i++)
+	for (i = 0; i < SMITH_PREMIUM_ITEMS; i++)
 		premiumitem[i]._itype = -1;
 
 	SpawnPremium(30);
@@ -132,7 +132,7 @@ void TakeGoldCheat()
 	int i;
 	char ig;
 
-	for (i = 0; i < 40; i++) {
+	for (i = 0; i < NUM_INV_GRID_ELEM; i++) {
 		ig = plr[myplr].InvGrid[i];
 		if (ig > 0 && plr[myplr].InvList[ig - 1]._itype == ITYPE_GOLD)
 			RemoveInvItem(myplr, ig - 1);

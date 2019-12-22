@@ -2,7 +2,6 @@
 
 int GetManaAmount(int id, int sn)
 {
-	int i;  // "raw" mana cost
 	int ma; // mana amount
 
 	// mana adjust
@@ -26,12 +25,12 @@ int GetManaAmount(int id, int sn)
 	}
 
 	if (spelldata[sn].sManaCost == 255) {
-		i = (BYTE)plr[id]._pMaxManaBase;
+		ma = ((BYTE)plr[id]._pMaxManaBase - adj);
 	} else {
-		i = spelldata[sn].sManaCost;
+		ma = (spelldata[sn].sManaCost - adj);
 	}
 
-	ma = (i - adj) << 6;
+	ma <<= 6;
 
 	if (sn == SPL_HEAL) {
 		ma = (spelldata[SPL_HEAL].sManaCost + 2 * plr[id]._pLevel - adj) << 6;
@@ -138,62 +137,13 @@ void CastSpell(int id, int spl, int sx, int sy, int dx, int dy, int caster, int 
 	if (spelldata[spl].sMissiles[0] == MIS_CBOLT) {
 		UseMana(id, SPL_CBOLT);
 
-		for (i = 0; i < (spllvl >> 1) + 3; i++) {
+		for (i = (spllvl >> 1) + 3; i > 0; i--) {
 			AddMissile(sx, sy, dx, dy, dir, MIS_CBOLT, caster, id, 0, spllvl);
 		}
 	}
 }
 
-/**
- * @param pnum player index
- * @param rid target player index
- */
-void DoResurrect(int pnum, int rid)
-{
-	int hp;
-
-	if ((char)rid != -1) {
-		AddMissile(plr[rid].WorldX, plr[rid].WorldY, plr[rid].WorldX, plr[rid].WorldY, 0, MIS_RESURRECTBEAM, 0, pnum, 0, 0);
-	}
-
-	if (pnum == myplr) {
-		NewCursor(CURSOR_HAND);
-	}
-
-	if ((char)rid != -1 && plr[rid]._pHitPoints == 0) {
-		if (rid == myplr) {
-			deathflag = FALSE;
-			gamemenu_off();
-			drawhpflag = TRUE;
-			drawmanaflag = TRUE;
-		}
-
-		ClrPlrPath(rid);
-		plr[rid].destAction = ACTION_NONE;
-		plr[rid]._pInvincible = FALSE;
-		PlacePlayer(rid);
-
-		hp = 640;
-		if (plr[rid]._pMaxHPBase < 640) {
-			hp = plr[rid]._pMaxHPBase;
-		}
-		SetPlayerHitPoints(rid, hp);
-
-		plr[rid]._pMana = 0;
-		plr[rid]._pHPBase = plr[rid]._pHitPoints + (plr[rid]._pMaxHPBase - plr[rid]._pMaxHP);
-		plr[rid]._pManaBase = plr[rid]._pMaxManaBase - plr[rid]._pMaxMana;
-
-		CalcPlrInv(rid, TRUE);
-
-		if (plr[rid].plrlevel == currlevel) {
-			StartStand(rid, plr[rid]._pdir);
-		} else {
-			plr[rid]._pmode = PM_STAND;
-		}
-	}
-}
-
-void PlacePlayer(int pnum)
+static void PlacePlayer(int pnum)
 {
 	int nx, ny, max, min, x, y;
 	DWORD i;
@@ -239,6 +189,55 @@ void PlacePlayer(int pnum)
 	}
 }
 
+/**
+ * @param pnum player index
+ * @param rid target player index
+ */
+void DoResurrect(int pnum, int rid)
+{
+	int hp;
+
+	if ((char)rid != -1) {
+		AddMissile(plr[rid].WorldX, plr[rid].WorldY, plr[rid].WorldX, plr[rid].WorldY, 0, MIS_RESURRECTBEAM, 0, pnum, 0, 0);
+	}
+
+	if (pnum == myplr) {
+		NewCursor(CURSOR_HAND);
+	}
+
+	if ((char)rid != -1 && plr[rid]._pHitPoints == 0) {
+		if (rid == myplr) {
+			deathflag = FALSE;
+			gamemenu_off();
+			drawhpflag = TRUE;
+			drawmanaflag = TRUE;
+		}
+
+		ClrPlrPath(rid);
+		plr[rid].destAction = ACTION_NONE;
+		plr[rid]._pInvincible = FALSE;
+		PlacePlayer(rid);
+
+		hp = 640;
+		if (plr[rid]._pMaxHPBase < 640) {
+			hp = plr[rid]._pMaxHPBase;
+		}
+		SetPlayerHitPoints(rid, hp);
+
+		plr[rid]._pHPBase = plr[rid]._pHitPoints + (plr[rid]._pMaxHPBase - plr[rid]._pMaxHP);
+		plr[rid]._pMana = 0;
+		plr[rid]._pManaBase = plr[rid]._pMana + (plr[rid]._pMaxManaBase - plr[rid]._pMaxMana);
+
+		CalcPlrInv(rid, TRUE);
+
+		if (plr[rid].plrlevel == currlevel) {
+			StartStand(rid, plr[rid]._pdir);
+		} else {
+			plr[rid]._pmode = PM_STAND;
+		}
+	}
+}
+
 void DoHealOther(int pnum, int rid)
 {
 	int i, j, hp;
@@ -248,14 +247,14 @@ void DoHealOther(int pnum, int rid)
 	}
 
 	if ((char)rid != -1 && (plr[rid]._pHitPoints >> 6) > 0) {
-		hp = (random(57, 10) + 1) << 6;
+		hp = (random_(57, 10) + 1) << 6;
 
 		for (i = 0; i < plr[pnum]._pLevel; i++) {
-			hp += (random(57, 4) + 1) << 6;
+			hp += (random_(57, 4) + 1) << 6;
 		}
 
 		for (j = 0; j < GetSpellLevel(pnum, SPL_HEALOTHER); ++j) {
-			hp += (random(57, 6) + 1) << 6;
+			hp += (random_(57, 6) + 1) << 6;
 		}
 
 		if (plr[pnum]._pClass == PC_WARRIOR) {

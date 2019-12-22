@@ -15,7 +15,7 @@ LPDIRECTSOUNDBUFFER sglpDSB;
 BOOLEAN gbMusicOn = TRUE;
 BOOLEAN gbSoundOn = TRUE;
 BOOLEAN gbDupSounds = TRUE;
-int sgnMusicTrack = 6;
+int sgnMusicTrack = NUM_MUSIC;
 char *sgszMusicTracks[NUM_MUSIC] = {
 #ifdef SPAWN
 	"Music\\sTowne.wav",
@@ -305,13 +305,15 @@ void sound_file_cleanup(TSnd *sound_file)
 
 void snd_init(HWND hWnd)
 {
+	int error_code;
 	sound_load_volume("Sound Volume", &sglSoundVolume);
 	gbSoundOn = sglSoundVolume > VOLUME_MIN;
 
 	sound_load_volume("Music Volume", &sglMusicVolume);
 	gbMusicOn = sglMusicVolume > VOLUME_MIN;
 
-	if (sound_DirectSoundCreate(NULL, &sglpDS, NULL) != DS_OK)
+	error_code = sound_DirectSoundCreate(NULL, &sglpDS, NULL);
+	if (error_code != DS_OK)
 		sglpDS = NULL;
 
 #ifdef __cplusplus
@@ -402,9 +404,9 @@ HRESULT sound_DirectSoundCreate(LPGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN pU
 
 	if (hDsound_dll == NULL) {
 		hDsound_dll = LoadLibrary("dsound.dll");
-		if (hDsound_dll == NULL) {
-			ErrDlg(IDD_DIALOG5, GetLastError(), "C:\\Src\\Diablo\\Source\\SOUND.CPP", 422);
-		}
+	}
+	if (hDsound_dll == NULL) {
+		ErrDlg(IDD_DIALOG5, GetLastError(), "C:\\Src\\Diablo\\Source\\SOUND.CPP", 422);
 	}
 
 	DirectSoundCreate = (HRESULT(WINAPI *)(LPGUID, LPDIRECTSOUND *, LPUNKNOWN))GetProcAddress(hDsound_dll, "DirectSoundCreate");
@@ -447,7 +449,7 @@ void music_stop()
 		SFileDdaEnd(sgpMusicTrack);
 		SFileCloseFile(sgpMusicTrack);
 		sgpMusicTrack = NULL;
-		sgnMusicTrack = 6;
+		sgnMusicTrack = NUM_MUSIC;
 	}
 }
 
@@ -479,7 +481,7 @@ void sound_disable_music(BOOL disable)
 {
 	if (disable) {
 		music_stop();
-	} else if (sgnMusicTrack != 6) {
+	} else if (sgnMusicTrack != NUM_MUSIC) {
 		music_start(sgnMusicTrack);
 	}
 }

@@ -43,7 +43,7 @@ void gmenu_draw_pause()
 		RedBack();
 	if (!sgpCurrentMenu) {
 		light_table_index = 0;
-		gmenu_print_text(316, 336, "Pause");
+		gmenu_print_text(316 + PANEL_LEFT, 336, "Pause");
 	}
 }
 
@@ -55,7 +55,7 @@ void gmenu_print_text(int x, int y, char *pszStr)
 		c = gbFontTransTbl[(BYTE)*pszStr++];
 		c = lfontframe[c];
 		if (c)
-			CelDecodeLightOnly(x, y, BigTGold_cel, c, 46);
+			CelDrawLight(x, y, BigTGold_cel, c, 46);
 		x += lfontkern[c] + 2;
 	}
 }
@@ -107,6 +107,7 @@ void gmenu_call_proc(TMenuItem *pItem, void (*gmFunc)(TMenuItem *))
 			sgCurrentMenuIdx++;
 		}
 	}
+	// BUGFIX: OOB access when sgCurrentMenuIdx is 0; should be set to NULL instead.
 	sgpCurrItem = &sgpCurrentMenu[sgCurrentMenuIdx - 1];
 	gmenu_up_down(TRUE);
 }
@@ -150,7 +151,7 @@ void gmenu_draw()
 	if (sgpCurrentMenu) {
 		if (dword_63447C)
 			dword_63447C(sgpCurrentMenu);
-		CelDecodeOnly((SCREEN_WIDTH - 296) / 2 + SCREEN_X, 102 + SCREEN_Y, sgpLogo, 1, 296);
+		CelDraw((SCREEN_WIDTH - 296) / 2 + SCREEN_X, 102 + SCREEN_Y, sgpLogo, 1, 296);
 		y = 160 + SCREEN_Y;
 		i = sgpCurrentMenu;
 		if (sgpCurrentMenu->fnMenu) {
@@ -162,7 +163,7 @@ void gmenu_draw()
 		}
 
 		ticks = GetTickCount();
-		if ((int)(ticks - PentSpin_tick) > 25) {
+		if ((int)(ticks - PentSpin_tick) > 25) { // BUGFIX: thould be 50ms
 			PentSpin_frame++;
 			if (PentSpin_frame == 9)
 				PentSpin_frame = 1;
@@ -173,26 +174,26 @@ void gmenu_draw()
 
 void gmenu_draw_menu_item(TMenuItem *pItem, int y)
 {
-	DWORD x, w, nSteps, step, pos, t;
+	DWORD w, x, nSteps, step, pos, t;
 	t = y - 2;
 	w = gmenu_get_lfont(pItem);
 	if (pItem->dwFlags & GMENU_SLIDER) {
 		x = 16 + w / 2 + SCREEN_X;
-		CelDecodeOnly(x, t - 8, optbar_cel, 1, 287);
+		CelDraw(x + PANEL_LEFT, t - 8, optbar_cel, 1, 287);
 		step = pItem->dwFlags & 0xFFF;
 		nSteps = (pItem->dwFlags & 0xFFF000) >> 12;
 		if (nSteps < 2)
 			nSteps = 2;
 		pos = step * 256 / nSteps;
-		gmenu_clear_buffer(x + 2, t - 10, pos + 13, 28);
-		CelDecodeOnly(x + 2 + pos, y - 12, option_cel, 1, 27);
+		gmenu_clear_buffer(x + 2 + PANEL_LEFT, t - 10, pos + 13, 28);
+		CelDraw(x + 2 + pos + PANEL_LEFT, y - 12, option_cel, 1, 27);
 	}
 	x = SCREEN_WIDTH / 2 - w / 2 + SCREEN_X;
 	light_table_index = (pItem->dwFlags & GMENU_ENABLED) ? 0 : 15;
 	gmenu_print_text(x, y, pItem->pszStr);
 	if (pItem == sgpCurrItem) {
-		CelDecodeOnly(x - 54, y + 1, PentSpin_cel, PentSpin_frame, 48);
-		CelDecodeOnly(x + 4 + w, y + 1, PentSpin_cel, PentSpin_frame, 48);
+		CelDraw(x - 54, y + 1, PentSpin_cel, PentSpin_frame, 48);
+		CelDraw(x + 4 + w, y + 1, PentSpin_cel, PentSpin_frame, 48);
 	}
 }
 
@@ -200,7 +201,8 @@ void gmenu_clear_buffer(int x, int y, int width, int height)
 {
 	BYTE *i;
 
-	for (i = gpBuffer + PitchTbl[y] + x; height; height--) {
+	i = gpBuffer + PitchTbl[y] + x;
+	while (height--) {
 		memset(i, 205, width);
 		i -= BUFFER_WIDTH;
 	}
@@ -297,15 +299,15 @@ BOOL gmenu_on_mouse_move()
 BOOLEAN gmenu_valid_mouse_pos(int *plOffset)
 {
 	*plOffset = 282;
-	if (MouseX < 282) {
+	if (MouseX < 282 + PANEL_LEFT) {
 		*plOffset = 0;
 		return 0;
 	}
-	if (MouseX > 538) {
+	if (MouseX > 538 + PANEL_LEFT) {
 		*plOffset = 256;
 		return 0;
 	}
-	*plOffset = MouseX - 282;
+	*plOffset = MouseX - 282 - PANEL_LEFT;
 	return 1;
 }
 

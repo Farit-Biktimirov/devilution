@@ -32,10 +32,10 @@ int plrxoff[9] = { 0, 2, 0, 2, 1, 0, 1, 2, 1 };
 int plryoff[9] = { 0, 2, 2, 0, 1, 1, 0, 1, 2 };
 int plrxoff2[9] = { 0, 1, 0, 1, 2, 0, 1, 2, 2 };
 int plryoff2[9] = { 0, 0, 1, 1, 0, 2, 2, 1, 2 };
-char PlrGFXAnimLens[3][11] = {
+char PlrGFXAnimLens[][11] = {
 	{ 10, 16, 8, 2, 20, 20, 6, 20, 8, 9, 14 },
 	{ 8, 18, 8, 4, 20, 16, 7, 20, 8, 10, 12 },
-	{ 8, 16, 8, 6, 20, 12, 8, 20, 8, 12, 8 }
+	{ 8, 16, 8, 6, 20, 12, 8, 20, 8, 12, 8 },
 };
 int PWVel[3][3] = {
 	{ 2048, 1024, 512 },
@@ -329,7 +329,8 @@ void InitPlrGFXMem(int pnum)
 
 DWORD GetPlrGFXSize(char *szCel)
 {
-	int c, a, w;
+	int c;
+	const char *a, *w;
 	DWORD dwSize, dwMaxSize;
 	HANDLE hsFile;
 	char pszName[256];
@@ -342,13 +343,13 @@ DWORD GetPlrGFXSize(char *szCel)
 		if (c != 0)
 			continue;
 #endif
-		for (a = 0; ArmourChar[a]; a++) {
+		for (a = &ArmourChar[0]; *a; a++) {
 #ifdef SPAWN
-			if (&ArmourChar[a] != &ArmourChar[0])
+			if (a != &ArmourChar[0])
 				break;
 #endif
-			for (w = 0; WepChar[w]; w++) { // BUGFIX loads non-existing animagions; DT is only for N, BT is only for U, D & H
-				sprintf(Type, "%c%c%c", CharChar[c], ArmourChar[a], WepChar[w]);
+			for (w = &WepChar[0]; *w; w++) { // BUGFIX loads non-existing animagions; DT is only for N, BT is only for U, D & H
+				sprintf(Type, "%c%c%c", CharChar[c], *a, *w);
 				sprintf(pszName, "PlrGFX\\%s\\%s\\%s%s.CL2", ClassStrTbl[c], Type, Type, szCel);
 				if (WOpenFile(pszName, &hsFile, TRUE)) {
 					/// ASSERT: assert(hsFile);
@@ -422,8 +423,6 @@ void SetPlrAnims(int pnum)
 		app_fatal("SetPlrAnims: illegal player %d", pnum);
 	}
 
-	pc = plr[pnum]._pClass;
-
 	plr[pnum]._pNWidth = 96;
 	plr[pnum]._pWWidth = 96;
 	plr[pnum]._pAWidth = 128;
@@ -431,6 +430,8 @@ void SetPlrAnims(int pnum)
 	plr[pnum]._pSWidth = 96;
 	plr[pnum]._pDWidth = 128;
 	plr[pnum]._pBWidth = 96;
+
+	pc = plr[pnum]._pClass;
 
 	if (leveltype == DTYPE_TOWN) {
 		plr[pnum]._pNFrames = PlrGFXAnimLens[pc][7];
@@ -666,7 +667,7 @@ void CreatePlayer(int pnum, char c)
 	plr[pnum]._pLvlChanging = FALSE;
 	plr[pnum].pTownWarps = 0;
 	plr[pnum].pLvlLoad = 0;
-	plr[pnum].pBattleNet = 0;
+	plr[pnum].pBattleNet = FALSE;
 	plr[pnum].pManaShield = FALSE;
 
 	InitDungMsgs(pnum);
@@ -691,7 +692,6 @@ int CalcStatDiff(int pnum)
 
 void NextPlrLevel(int pnum)
 {
-	char l, c;
 	int hp, mana;
 
 	if ((DWORD)pnum >= MAX_PLRS) {
@@ -699,8 +699,6 @@ void NextPlrLevel(int pnum)
 	}
 
 	plr[pnum]._pLevel++;
-	l = plr[pnum]._pLevel;
-
 	plr[pnum]._pMaxLvl++;
 
 	if (CalcStatDiff(pnum) < 5) {
@@ -709,11 +707,9 @@ void NextPlrLevel(int pnum)
 		plr[pnum]._pStatPts += 5;
 	}
 
-	plr[pnum]._pNextExper = ExpLvlsTbl[l];
+	plr[pnum]._pNextExper = ExpLvlsTbl[plr[pnum]._pLevel];
 
-	c = plr[pnum]._pClass;
-
-	hp = c == PC_SORCERER ? 64 : 128;
+	hp = plr[pnum]._pClass == PC_SORCERER ? 64 : 128;
 	if (gbMaxPlayers == 1) {
 		hp++;
 	}
@@ -726,7 +722,11 @@ void NextPlrLevel(int pnum)
 		drawhpflag = TRUE;
 	}
 
-	mana = c != PC_WARRIOR ? 128 : 64;
+	if (plr[pnum]._pClass == PC_WARRIOR)
+		mana = 64;
+	else
+		mana = 128;
+
 	if (gbMaxPlayers == 1) {
 		mana++;
 	}
@@ -808,7 +808,7 @@ void AddPlrExperience(int pnum, int lvl, int exp)
 
 void AddPlrMonstExper(int lvl, int exp, char pmask)
 {
-	int totplrs, i;
+	int totplrs, i, e;
 
 	totplrs = 0;
 	for (i = 0; i < MAX_PLRS; i++) {
@@ -818,9 +818,9 @@ void AddPlrMonstExper(int lvl, int exp, char pmask)
 	}
 
 	if (totplrs) {
-		exp = exp / totplrs;
+		e = exp / totplrs;
 		if (pmask & (1 << myplr))
-			AddPlrExperience(myplr, lvl, exp);
+			AddPlrExperience(myplr, lvl, e);
 	}
 }
 
@@ -862,8 +862,8 @@ void InitPlayer(int pnum, BOOL FirstTime)
 		if (plr[pnum]._pHitPoints >> 6 > 0) {
 			plr[pnum]._pmode = PM_STAND;
 			NewPlrAnim(pnum, plr[pnum]._pNAnim[DIR_S], plr[pnum]._pNFrames, 3, plr[pnum]._pNWidth);
-			plr[pnum]._pAnimFrame = random(2, plr[pnum]._pNFrames - 1) + 1;
-			plr[pnum]._pAnimCnt = random(2, 3);
+			plr[pnum]._pAnimFrame = random_(2, plr[pnum]._pNFrames - 1) + 1;
+			plr[pnum]._pAnimCnt = random_(2, 3);
 		} else {
 			plr[pnum]._pmode = PM_DEATH;
 			NewPlrAnim(pnum, plr[pnum]._pDAnim[DIR_S], plr[pnum]._pDFrames, 1, plr[pnum]._pDWidth);
@@ -1135,7 +1135,7 @@ void StartWalkStand(int pnum)
 	plr[pnum]._pxoff = 0;
 	plr[pnum]._pyoff = 0;
 
-	CheckEFlag(pnum, 0);
+	CheckEFlag(pnum, FALSE);
 
 	if (pnum == myplr) {
 		ScrollInfo._sxoff = 0;
@@ -1159,7 +1159,6 @@ void PM_ChangeLightOff(int pnum)
 	}
 
 	l = &LightList[plr[pnum]._plid];
-	ymul = -1;
 	x = 2 * plr[pnum]._pyoff + plr[pnum]._pxoff;
 	y = 2 * plr[pnum]._pyoff - plr[pnum]._pxoff;
 	if (x < 0) {
@@ -1169,6 +1168,7 @@ void PM_ChangeLightOff(int pnum)
 		xmul = 1;
 	}
 	if (y < 0) {
+		ymul = -1;
 		y = -y;
 	} else {
 		ymul = 1;
@@ -1874,7 +1874,7 @@ void DropHalfPlayersGold(int pnum)
 			}
 		}
 	}
-	drawpanflag = 255;
+	force_redraw = 255;
 	if (hGold > 0) {
 		for (i = 0; i < plr[pnum]._pNumInv && hGold > 0; i++) {
 			if (plr[pnum].InvList[i]._itype == ITYPE_GOLD && plr[pnum].InvList[i]._ivalue != GOLD_MAX_LIMIT) {
@@ -1954,28 +1954,31 @@ void SyncPlrKill(int pnum, int earflag)
 
 void RemovePlrMissiles(int pnum)
 {
-	int mi, am;
+	int i, am;
+	int mx, my;
 
 	if (currlevel != 0 && pnum == myplr && (monster[myplr]._mx != 1 || monster[myplr]._my != 0)) {
 		M_StartKill(myplr, myplr);
-		AddDead(monster[myplr]._mx, monster[myplr]._my, monster[myplr].MType->mdeadval, (direction)monster[myplr]._mdir);
-		dMonster[monster[myplr]._mx][monster[myplr]._my] = 0;
+		AddDead(monster[myplr]._mx, monster[myplr]._my, (monster[myplr].MType)->mdeadval, monster[myplr]._mdir);
+		mx = monster[myplr]._mx;
+		my = monster[myplr]._my;
+		dMonster[mx][my] = 0;
 		monster[myplr]._mDelFlag = TRUE;
 		DeleteMonsterList();
 	}
 
-	for (mi = 0; mi < nummissiles; mi++) {
-		am = missileactive[mi];
+	for (i = 0; i < nummissiles; i++) {
+		am = missileactive[i];
 		if (missile[am]._mitype == MIS_STONE && missile[am]._misource == pnum) {
 			monster[missile[am]._miVar2]._mmode = missile[am]._miVar1;
 		}
 		if (missile[am]._mitype == MIS_MANASHIELD && missile[am]._misource == pnum) {
 			ClearMissileSpot(am);
-			DeleteMissile(am, mi);
+			DeleteMissile(am, i);
 		}
 		if (missile[am]._mitype == MIS_ETHEREALIZE && missile[am]._misource == pnum) {
 			ClearMissileSpot(am);
-			DeleteMissile(am, mi);
+			DeleteMissile(am, i);
 		}
 	}
 }
@@ -2258,7 +2261,7 @@ BOOL WeaponDur(int pnum, int durrnd)
 		return FALSE;
 	}
 
-	if (random(3, durrnd) != 0) {
+	if (random_(3, durrnd) != 0) {
 		return FALSE;
 	}
 
@@ -2352,7 +2355,7 @@ BOOL PlrHitMonst(int pnum, int m)
 
 	rv = FALSE;
 
-	hit = random(4, 100);
+	hit = random_(4, 100);
 	if (monster[m]._mmode == MM_STONE) {
 		hit = 0;
 	}
@@ -2370,7 +2373,7 @@ BOOL PlrHitMonst(int pnum, int m)
 		hper = 95;
 	}
 
-	if (CheckMonsterHit(m, &ret)) {
+	if (CheckMonsterHit(m, ret)) {
 		return ret;
 	}
 #ifdef _DEBUG
@@ -2380,12 +2383,12 @@ BOOL PlrHitMonst(int pnum, int m)
 #endif
 		mind = plr[pnum]._pIMinDam;
 		maxd = plr[pnum]._pIMaxDam;
-		dam = random(5, maxd - mind + 1) + mind;
+		dam = random_(5, maxd - mind + 1) + mind;
 		dam += dam * plr[pnum]._pIBonusDam / 100;
 		dam += plr[pnum]._pDamageMod + plr[pnum]._pIBonusDamMod;
 		if (plr[pnum]._pClass == PC_WARRIOR) {
 			ddp = plr[pnum]._pLevel;
-			if (random(6, 100) < ddp) {
+			if (random_(6, 100) < ddp) {
 				dam *= 2;
 			}
 		}
@@ -2427,7 +2430,7 @@ BOOL PlrHitMonst(int pnum, int m)
 		}
 
 		if (plr[pnum]._pIFlags & ISPL_RNDSTEALLIFE) {
-			skdam = random(7, dam >> 3);
+			skdam = random_(7, dam >> 3);
 			plr[pnum]._pHitPoints += skdam;
 			if (plr[pnum]._pHitPoints > plr[pnum]._pMaxHP) {
 				plr[pnum]._pHitPoints = plr[pnum]._pMaxHP;
@@ -2527,7 +2530,7 @@ BOOL PlrHitPlr(int pnum, char p)
 		app_fatal("PlrHitPlr: illegal attacking player %d", pnum);
 	}
 
-	hit = random(4, 100);
+	hit = random_(4, 100);
 
 	hper = (plr[pnum]._pDexterity >> 1) + plr[pnum]._pLevel + 50 - (plr[p]._pIBonusAC + plr[p]._pIAC + plr[p]._pDexterity / 5);
 
@@ -2543,7 +2546,7 @@ BOOL PlrHitPlr(int pnum, char p)
 	}
 
 	if ((plr[p]._pmode == PM_STAND || plr[p]._pmode == PM_ATTACK) && plr[p]._pBlockFlag) {
-		blk = random(5, 100);
+		blk = random_(5, 100);
 	} else {
 		blk = 100;
 	}
@@ -2562,19 +2565,19 @@ BOOL PlrHitPlr(int pnum, char p)
 			StartPlrBlock(p, dir);
 		} else {
 			mind = plr[pnum]._pIMinDam;
-			maxd = random(5, plr[pnum]._pIMaxDam - mind + 1);
+			maxd = random_(5, plr[pnum]._pIMaxDam - mind + 1);
 			dam = maxd + mind;
 			dam += plr[pnum]._pDamageMod + plr[pnum]._pIBonusDamMod + dam * plr[pnum]._pIBonusDam / 100;
 
 			if (plr[pnum]._pClass == PC_WARRIOR) {
 				lvl = plr[pnum]._pLevel;
-				if (random(6, 100) < lvl) {
+				if (random_(6, 100) < lvl) {
 					dam *= 2;
 				}
 			}
 			skdam = dam << 6;
 			if (plr[pnum]._pIFlags & ISPL_RNDSTEALLIFE) {
-				tac = random(7, skdam >> 3);
+				tac = random_(7, skdam >> 3);
 				plr[pnum]._pHitPoints += tac;
 				if (plr[pnum]._pHitPoints > plr[pnum]._pMaxHP) {
 					plr[pnum]._pHitPoints = plr[pnum]._pMaxHP;
@@ -2805,7 +2808,7 @@ BOOL PM_DoBlock(int pnum)
 		StartStand(pnum, plr[pnum]._pdir);
 		ClearPlrPVars(pnum);
 
-		if (!random(3, 10)) {
+		if (!random_(3, 10)) {
 			ShieldDur(pnum);
 		}
 		return TRUE;
@@ -2837,7 +2840,7 @@ BOOL PM_DoSpell(int pnum)
 				        & (unsigned __int64)1 << (plr[pnum]._pRSpell - 1))) {
 					plr[pnum]._pRSpell = SPL_INVALID;
 					plr[pnum]._pRSplType = RSPLTYPE_INVALID;
-					drawpanflag = 255;
+					force_redraw = 255;
 				}
 			}
 
@@ -2846,7 +2849,7 @@ BOOL PM_DoSpell(int pnum)
 				        & (unsigned __int64)1 << (plr[pnum]._pRSpell - 1))) {
 					plr[pnum]._pRSpell = SPL_INVALID;
 					plr[pnum]._pRSplType = RSPLTYPE_INVALID;
-					drawpanflag = 255;
+					force_redraw = 255;
 				}
 			}
 		}
@@ -2891,7 +2894,7 @@ BOOL PM_DoGotHit(int pnum)
 	if (plr[pnum]._pAnimFrame >= plr[pnum]._pHFrames) {
 		StartStand(pnum, plr[pnum]._pdir);
 		ClearPlrPVars(pnum);
-		if (random(3, 4)) {
+		if (random_(3, 4)) {
 			ArmorDur(pnum);
 		}
 
@@ -2920,7 +2923,7 @@ void ArmorDur(int pnum)
 		return;
 	}
 
-	a = random(8, 3);
+	a = random_(8, 3);
 	if (p->InvBody[INVLOC_CHEST]._itype != ITYPE_NONE && p->InvBody[INVLOC_HEAD]._itype == ITYPE_NONE) {
 		a = 1;
 	}
@@ -3660,7 +3663,7 @@ void CheckPlrSpell()
 
 	if (pcurs != CURSOR_HAND
 	    || MouseY >= PANEL_TOP
-	    || (chrflag && MouseX < 320 || invflag && MouseX > 320)
+	    || (chrflag && MouseX < 320 || invflag && MouseX > RIGHT_PANEL)
 	        && rspell != SPL_HEAL
 	        && rspell != SPL_IDENTIFY
 	        && rspell != SPL_REPAIR

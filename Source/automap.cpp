@@ -71,24 +71,21 @@ void InitAutomap()
 	switch (leveltype) {
 	case DTYPE_CATHEDRAL:
 		pAFile = LoadFileInMem("Levels\\L1Data\\L1.AMP", &dwTiles);
-		dwTiles >>= 1;
 		break;
 	case DTYPE_CATACOMBS:
 		pAFile = LoadFileInMem("Levels\\L2Data\\L2.AMP", &dwTiles);
-		dwTiles >>= 1;
 		break;
 	case DTYPE_CAVES:
 		pAFile = LoadFileInMem("Levels\\L3Data\\L3.AMP", &dwTiles);
-		dwTiles >>= 1;
 		break;
 	case DTYPE_HELL:
 		pAFile = LoadFileInMem("Levels\\L4Data\\L4.AMP", &dwTiles);
-		dwTiles >>= 1;
 		break;
 	default:
 		return;
 	}
 
+	dwTiles >>= 1;
 	pTmp = pAFile;
 
 	for (i = 1; i <= dwTiles; i++) {
@@ -173,7 +170,7 @@ void DrawAutomap()
 		return;
 	}
 
-	gpBufEnd = &gpBuffer[(PANEL_Y) * BUFFER_WIDTH];
+	gpBufEnd = &gpBuffer[(PANEL_Y)*BUFFER_WIDTH];
 
 	MapX = (ViewX - 16) >> 1;
 	while (MapX + AutoMapXOfs < 0)
@@ -296,17 +293,17 @@ void DrawAutomapType(int sx, int sy, WORD automap_type)
 		DrawLine(sx, y1, x2, y2, COLOR_DIM);
 		DrawLine(sx, sy, x1, y2, COLOR_DIM);
 		DrawLine(sx, sy, x2, y2, COLOR_DIM);
-		return;
+		break;
 	case 2:
 	case 5:
 		do_vert = TRUE;
 		break;
-	case 4:
-		do_vert = TRUE;
-		do_horz = TRUE;
-		break;
 	case 3:
 	case 6:
+		do_horz = TRUE;
+		break;
+	case 4:
+		do_vert = TRUE;
 		do_horz = TRUE;
 		break;
 	case 8:
@@ -534,10 +531,12 @@ WORD GetAutomapType(int x, int y, BOOL view)
 	}
 
 	rv = automaptype[(BYTE)dungeon[x][y]];
-	if (rv == 7
-	    && GetAutomapType(x - 1, y, FALSE) & (MAPFLAG_HORZARCH << 8)
-	    && GetAutomapType(x, y - 1, FALSE) & (MAPFLAG_VERTARCH << 8)) {
-		rv = 1;
+	if (rv == 7) {
+		if ((GetAutomapType(x - 1, y, FALSE) >> 8) & MAPFLAG_HORZARCH) {
+			if ((GetAutomapType(x, y - 1, FALSE) >> 8) & MAPFLAG_VERTARCH) {
+				rv = 1;
+			}
+		}
 	}
 	return rv;
 }
@@ -586,52 +585,52 @@ void SetAutomapView(int x, int y)
 	case 2:
 		if (solid) {
 			if (GetAutomapType(xx, yy + 1, FALSE) == 0x4007)
-				automapview[xx][yy + 1] = 1;
+				automapview[xx][yy + 1] = TRUE;
 		} else if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000) {
-			automapview[xx - 1][yy] = 1;
+			automapview[xx - 1][yy] = TRUE;
 		}
 		break;
 	case 3:
 		if (solid) {
 			if (GetAutomapType(xx + 1, yy, FALSE) == 0x4007)
-				automapview[xx + 1][yy] = 1;
+				automapview[xx + 1][yy] = TRUE;
 		} else if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000) {
-			automapview[xx][yy - 1] = 1;
+			automapview[xx][yy - 1] = TRUE;
 		}
 		break;
 	case 4:
 		if (solid) {
 			if (GetAutomapType(xx, yy + 1, FALSE) == 0x4007)
-				automapview[xx][yy + 1] = 1;
+				automapview[xx][yy + 1] = TRUE;
 			if (GetAutomapType(xx + 1, yy, FALSE) == 0x4007)
-				automapview[xx + 1][yy] = 1;
+				automapview[xx + 1][yy] = TRUE;
 		} else {
 			if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000)
-				automapview[xx - 1][yy] = 1;
+				automapview[xx - 1][yy] = TRUE;
 			if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000)
-				automapview[xx][yy - 1] = 1;
+				automapview[xx][yy - 1] = TRUE;
 			if (GetAutomapType(xx - 1, yy - 1, FALSE) & 0x4000)
-				automapview[xx - 1][yy - 1] = 1;
+				automapview[xx - 1][yy - 1] = TRUE;
 		}
 		break;
 	case 5:
 		if (solid) {
 			if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000)
-				automapview[xx][yy - 1] = 1;
+				automapview[xx][yy - 1] = TRUE;
 			if (GetAutomapType(xx, yy + 1, FALSE) == 0x4007)
-				automapview[xx][yy + 1] = 1;
+				automapview[xx][yy + 1] = TRUE;
 		} else if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000) {
-			automapview[xx - 1][yy] = 1;
+			automapview[xx - 1][yy] = TRUE;
 		}
 		break;
 	case 6:
 		if (solid) {
 			if (GetAutomapType(xx - 1, yy, FALSE) & 0x4000)
-				automapview[xx - 1][yy] = 1;
+				automapview[xx - 1][yy] = TRUE;
 			if (GetAutomapType(xx + 1, yy, FALSE) == 0x4007)
-				automapview[xx + 1][yy] = 1;
+				automapview[xx + 1][yy] = TRUE;
 		} else if (GetAutomapType(xx, yy - 1, FALSE) & 0x4000) {
-			automapview[xx][yy - 1] = 1;
+			automapview[xx][yy - 1] = TRUE;
 		}
 		break;
 	}

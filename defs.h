@@ -1,5 +1,7 @@
 // some global definitions, found in debug release
 
+#define GAME_NAME				"DIABLO"
+
 #define DMAXX					40
 #define DMAXY					40
 
@@ -50,6 +52,10 @@
 
 // todo: enums
 #define NUMLEVELS				17
+#define SMITH_ITEMS				20
+#define SMITH_PREMIUM_ITEMS		6
+#define SMITH_MAX_VALUE			140000
+#define SMITH_MAX_PREMIUM_VALUE 140000
 
 // from diablo 2 beta
 #define MAXEXP					2000000000
@@ -121,13 +127,23 @@
 #define PANEL_WIDTH     640
 #define PANEL_HEIGHT    128
 #define PANEL_TOP		(SCREEN_HEIGHT - PANEL_HEIGHT)
-#define PANEL_Y			(PANEL_TOP + SCREEN_Y)
+#define PANEL_LEFT		(SCREEN_WIDTH - PANEL_WIDTH) / 2
+#define PANEL_X			(SCREEN_X + PANEL_LEFT)
+#define PANEL_Y			(SCREEN_Y + PANEL_TOP)
 
-#if SCREEN_WIDTH == PANEL_WIDTH
+#define SPANEL_HEIGHT	 352
+
+#define RIGHT_PANEL		(SCREEN_WIDTH - 320)
+#define RIGHT_PANEL_X	(SCREEN_X + RIGHT_PANEL)
+
+#if SCREEN_WIDTH <= PANEL_WIDTH
 #define VIEWPORT_HEIGHT	(SCREEN_HEIGHT - PANEL_HEIGHT)
 #else
 #define VIEWPORT_HEIGHT	SCREEN_HEIGHT
 #endif
+
+#define DIALOG_TOP		((SCREEN_HEIGHT - PANEL_HEIGHT) / 2 - 18)
+#define DIALOG_Y		(SCREEN_Y + DIALOG_TOP)
 
 #define SCREENXY(x, y)	((x) + SCREEN_X + ((y) + SCREEN_Y) * BUFFER_WIDTH)
 
@@ -172,4 +188,16 @@ typedef void (*_PVFV)(void);
 #define ALIGN_BY_1 __declspec(align(1))
 #else
 #define ALIGN_BY_1
+#endif
+
+#if (_MSC_VER == 1200)
+#define __FINLINE __forceinline
+#else
+#define __FINLINE
+#endif
+
+#ifndef _BIG_ENDIAN_
+#define SwapLE32
+#else
+#define SwapLE32(value) (value << 24 | (value & 0xFF00) << 8 | (value & 0xFF0000) >> 8 | value >> 24);
 #endif

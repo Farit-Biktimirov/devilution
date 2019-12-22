@@ -1,46 +1,6 @@
 #include "diablo.h"
 
-void CaptureScreen()
-{
-	HANDLE hObject;
-	PALETTEENTRY palette[256];
-	char FileName[MAX_PATH];
-	BOOL success;
-
-	hObject = CaptureFile(FileName);
-	if (hObject != INVALID_HANDLE_VALUE) {
-		DrawAndBlit();
-#ifdef __cplusplus
-		lpDDPalette->GetEntries(0, 0, 256, palette);
-#else
-		lpDDPalette->lpVtbl->GetEntries(lpDDPalette, 0, 0, 256, palette);
-#endif
-		RedPalette(palette);
-
-		lock_buf(2);
-		success = CaptureHdr(hObject, SCREEN_WIDTH, SCREEN_HEIGHT);
-		if (success) {
-			success = CapturePix(hObject, SCREEN_WIDTH, SCREEN_HEIGHT, BUFFER_WIDTH, &gpBuffer[SCREENXY(0, 0)]);
-			if (success) {
-				success = CapturePal(hObject, palette);
-			}
-		}
-		unlock_buf(2);
-		CloseHandle(hObject);
-
-		if (!success)
-			DeleteFile(FileName);
-
-		Sleep(300);
-#ifdef __cplusplus
-		lpDDPalette->SetEntries(0, 0, 256, palette);
-#else
-		lpDDPalette->lpVtbl->SetEntries(lpDDPalette, 0, 0, 256, palette);
-#endif
-	}
-}
-
-BOOL CaptureHdr(HANDLE hFile, short width, short height)
+static BOOL CaptureHdr(HANDLE hFile, short width, short height)
 {
 	DWORD lpNumBytes;
 	PCXHEADER Buffer;
@@ -60,7 +20,7 @@ BOOL CaptureHdr(HANDLE hFile, short width, short height)
 	return WriteFile(hFile, &Buffer, sizeof(Buffer), &lpNumBytes, NULL) && lpNumBytes == sizeof(Buffer);
 }
 
-BOOL CapturePal(HANDLE hFile, PALETTEENTRY *palette)
+static BOOL CapturePal(HANDLE hFile, PALETTEENTRY *palette)
 {
 	DWORD NumberOfBytesWritten;
 	BYTE pcx_palette[769];
@@ -76,27 +36,7 @@ BOOL CapturePal(HANDLE hFile, PALETTEENTRY *palette)
 	return WriteFile(hFile, pcx_palette, 769, &NumberOfBytesWritten, 0) && NumberOfBytesWritten == 769;
 }
 
-BOOL CapturePix(HANDLE hFile, WORD width, WORD height, WORD stride, BYTE *pixels)
-{
-	int writeSize;
-	DWORD lpNumBytes;
-	BYTE *pBuffer, *pBufferEnd;
-
-	pBuffer = (BYTE *)DiabloAllocPtr(2 * width);
-	while (height != 0) {
-		height--;
-		pBufferEnd = CaptureEnc(pixels, pBuffer, width);
-		pixels += stride;
-		writeSize = pBufferEnd - pBuffer;
-		if (!(WriteFile(hFile, pBuffer, writeSize, &lpNumBytes, 0) && lpNumBytes == writeSize)) {
-			return FALSE;
-		}
-	}
-	mem_free_dbg(pBuffer);
-	return TRUE;
-}
-
-BYTE *CaptureEnc(BYTE *src, BYTE *dst, int width)
+static BYTE *CaptureEnc(BYTE *src, BYTE *dst, int width)
 {
 	int rleLength;
 
@@ -130,7 +70,26 @@ BYTE *CaptureEnc(BYTE *src, BYTE *dst, int width)
 	return dst;
 }
 
-HANDLE CaptureFile(char *dst_path)
+static BOOL CapturePix(HANDLE hFile, WORD width, WORD height, WORD stride, BYTE *pixels)
+{
+	int writeSize;
+	DWORD lpNumBytes;
+	BYTE *pBuffer, *pBufferEnd;
+
+	pBuffer = (BYTE *)DiabloAllocPtr(2 * width);
+	while (height--) {
+		pBufferEnd = CaptureEnc(pixels, pBuffer, width);
+		pixels += stride;
+		writeSize = pBufferEnd - pBuffer;
+		if (!(WriteFile(hFile, pBuffer, writeSize, &lpNumBytes, 0) && lpNumBytes == writeSize)) {
+			return FALSE;
+		}
+	}
+	mem_free_dbg(pBuffer);
+	return TRUE;
+}
+
+static HANDLE CaptureFile(char *dst_path)
 {
 	BOOLEAN num_used[100];
 	int free_num, hFind;
@@ -158,7 +117,7 @@ HANDLE CaptureFile(char *dst_path)
 	return INVALID_HANDLE_VALUE;
 }
 
-void RedPalette(PALETTEENTRY *pal)
+static void RedPalette(PALETTEENTRY *pal)
 {
 	PALETTEENTRY red[256];
 	int i;
@@ -175,4 +134,44 @@ void RedPalette(PALETTEENTRY *pal)
 #else
 	lpDDPalette->lpVtbl->SetEntries(lpDDPalette, 0, 0, 256, red);
 #endif
+}
+
+void CaptureScreen()
+{
+	HANDLE hObject;
+	PALETTEENTRY palette[256];
+	char FileName[MAX_PATH];
+	BOOL success;
+
+	hObject = CaptureFile(FileName);
+	if (hObject != INVALID_HANDLE_VALUE) {
+		DrawAndBlit();
+#ifdef __cplusplus
+		lpDDPalette->GetEntries(0, 0, 256, palette);
+#else
+		lpDDPalette->lpVtbl->GetEntries(lpDDPalette, 0, 0, 256, palette);
+#endif
+		RedPalette(palette);
+
+		lock_buf(2);
+		success = CaptureHdr(hObject, SCREEN_WIDTH, SCREEN_HEIGHT);
+		if (success) {
+			success = CapturePix(hObject, SCREEN_WIDTH, SCREEN_HEIGHT, BUFFER_WIDTH, &gpBuffer[SCREENXY(0, 0)]);
+		}
+		if (success) {
+			success = CapturePal(hObject, palette);
+		}
+		unlock_buf(2);
+		CloseHandle(hObject);
+
+		if (!success)
+			DeleteFile(FileName);
+
+		Sleep(300);
+#ifdef __cplusplus
+		lpDDPalette->SetEntries(0, 0, 256, palette);
+#else
+		lpDDPalette->lpVtbl->SetEntries(lpDDPalette, 0, 0, 256, palette);
+#endif
+	}
 }

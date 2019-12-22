@@ -5,14 +5,14 @@ int storenumh;
 int stextlhold;
 ItemStruct boyitem;
 int stextshold;
-ItemStruct premiumitem[6];
+ItemStruct premiumitem[SMITH_PREMIUM_ITEMS];
 BYTE *pSTextBoxCels;
 int premiumlevel;
 int talker;
 STextStruct stext[24];
 char stextsize;
 int stextsmax;
-int InStoreFlag;
+int InStoreFlag; /** current frame # for the pentagram selector */
 ItemStruct storehold[48];
 int gossipstart;
 ItemStruct witchitem[20];
@@ -29,7 +29,7 @@ int gossipend;
 BYTE *pSPentSpn2Cels;
 int stextsval;
 int boylevel;
-ItemStruct smithitem[20];
+ItemStruct smithitem[SMITH_ITEMS];
 int stextdown;
 char stextscrlubtn;
 char stextflag;
@@ -130,9 +130,9 @@ void FreeStoreMem()
 
 void DrawSTextBack()
 {
-	CelDecodeOnly(408, 487, pSTextBoxCels, 1, 271);
+	CelDraw(PANEL_X + 344, 487, pSTextBoxCels, 1, 271);
 
-#define TRANS_RECT_X 347
+#define TRANS_RECT_X (PANEL_LEFT + 347)
 #define TRANS_RECT_Y 28
 #define TRANS_RECT_WIDTH 265
 #define TRANS_RECT_HEIGHT 297
@@ -148,9 +148,9 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 
 	s = SStringY[y] + stext[y]._syoff;
 	if (stextsize)
-		xx = 96;
+		xx = PANEL_X + 32;
 	else
-		xx = 416;
+		xx = PANEL_X + 352;
 	off = xx + x + PitchTbl[s + 204];
 	len = strlen(str);
 	if (stextsize)
@@ -167,7 +167,7 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 		off += k;
 	}
 	if (stextsel == y) {
-		CelDecodeOnly(cjustflag ? xx + x + k - 20 : xx + x - 20, s + 205, pSPentSpn2Cels, InStoreFlag, 12);
+		CelDraw(cjustflag ? xx + x + k - 20 : xx + x - 20, s + 205, pSPentSpn2Cels, InStoreFlag, 12);
 	}
 	for (i = 0; i < len; i++) {
 		c = fontframe[gbFontTransTbl[(BYTE)str[i]]];
@@ -179,7 +179,7 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 	}
 	if (!cjustflag && val >= 0) {
 		sprintf(valstr, "%i", val);
-		off = PitchTbl[s + 204] + 656 - x;
+		off = PitchTbl[s + 204] + PANEL_X + 592 - x;
 		for (i = strlen(valstr) - 1; i >= 0; i--) {
 			c = fontframe[gbFontTransTbl[(BYTE)valstr[i]]];
 			off -= fontkern[c] + 1;
@@ -189,22 +189,23 @@ void PrintSString(int x, int y, BOOL cjustflag, char *str, char col, int val)
 		}
 	}
 	if (stextsel == y) {
-		CelDecodeOnly(cjustflag ? xx + x + k + 4 : 660 - x, s + 205, pSPentSpn2Cels, InStoreFlag, 12);
+		CelDraw(cjustflag ? (xx + x + k + 4) : (PANEL_X + 596 - x), s + 205, pSPentSpn2Cels, InStoreFlag, 12);
 	}
 }
 
 void DrawSLine(int y)
 {
-	int xy, yy, width, line;
+	int xy, yy, width, line, sy;
 
+	sy = SStringY[y];
 	if (stextsize == 1) {
-		xy = SCREENXY(26, 25);
-		yy = PitchTbl[SStringY[y] + 198] + 26 + 64;
+		xy = SCREENXY(PANEL_LEFT + 26, 25);
+		yy = PitchTbl[sy + 198] + 26 + PANEL_X;
 		width = 586 / 4;
 		line = BUFFER_WIDTH - 586;
 	} else {
-		xy = SCREENXY(346, 25);
-		yy = PitchTbl[SStringY[y] + 198] + 346 + 64;
+		xy = SCREENXY(PANEL_LEFT + 346, 25);
+		yy = PitchTbl[sy + 198] + 346 + PANEL_X;
 		width = 266 / 4;
 		line = BUFFER_WIDTH - 266;
 	}
@@ -247,16 +248,16 @@ void DrawSArrows(int y1, int y2)
 	yd1 = SStringY[y1] + 204;
 	yd2 = SStringY[y2] + 204;
 	if (stextscrlubtn != -1)
-		CelDecodeOnly(665, yd1, pSTextSlidCels, 12, 12);
+		CelDraw(PANEL_X + 601, yd1, pSTextSlidCels, 12, 12);
 	else
-		CelDecodeOnly(665, yd1, pSTextSlidCels, 10, 12);
+		CelDraw(PANEL_X + 601, yd1, pSTextSlidCels, 10, 12);
 	if (stextscrldbtn != -1)
-		CelDecodeOnly(665, yd2, pSTextSlidCels, 11, 12);
+		CelDraw(PANEL_X + 601, yd2, pSTextSlidCels, 11, 12);
 	else
-		CelDecodeOnly(665, yd2, pSTextSlidCels, 9, 12);
+		CelDraw(PANEL_X + 601, yd2, pSTextSlidCels, 9, 12);
 	yd1 += 12;
 	for (yd3 = yd1; yd3 < yd2; yd3 += 12) {
-		CelDecodeOnly(665, yd3, pSTextSlidCels, 14, 12);
+		CelDraw(PANEL_X + 601, yd3, pSTextSlidCels, 14, 12);
 	}
 	if (stextsel == 22)
 		yd3 = stextlhold;
@@ -266,7 +267,7 @@ void DrawSArrows(int y1, int y2)
 		yd3 = 1000 * (stextsval + ((yd3 - stextup) >> 2)) / (storenumh - 1) * (SStringY[y2] - SStringY[y1] - 24) / 1000;
 	else
 		yd3 = 0;
-	CelDecodeOnly(665, SStringY[y1 + 1] + 204 + yd3, pSTextSlidCels, 13, 12);
+	CelDraw(PANEL_X + 601, SStringY[y1 + 1] + 204 + yd3, pSTextSlidCels, 13, 12);
 }
 
 void DrawSTextHelp()
@@ -326,9 +327,9 @@ void StoreAutoPlace()
 	int i, w, h, idx;
 
 	SetICursor(plr[myplr].HoldItem._iCurs + CURSOR_FIRSTITEM);
-	done = FALSE;
 	w = icursW28;
 	h = icursH28;
+	done = FALSE;
 	if (w == 1 && h == 1) {
 		idx = plr[myplr].HoldItem.IDidx;
 		if (plr[myplr].HoldItem._iStatFlag && AllItemsList[idx].iUsable) {
@@ -449,6 +450,8 @@ void S_ScrollSBuy(int idx)
 void PrintStoreItem(ItemStruct *x, int l, char iclr)
 {
 	char sstr[128];
+	char str, dex;
+	BYTE mag;
 
 	sstr[0] = '\0';
 	if (x->_iIdentified) {
@@ -480,7 +483,7 @@ void PrintStoreItem(ItemStruct *x, int l, char iclr)
 		sprintf(sstr, "Damage: %i-%i  ", x->_iMinDam, x->_iMaxDam);
 	if (x->_iClass == ICLASS_ARMOR)
 		sprintf(sstr, "Armor: %i  ", x->_iAC);
-	if (x->_iMaxDur != 255 && x->_iMaxDur) {
+	if (x->_iMaxDur != DUR_INDESTRUCTIBLE && x->_iMaxDur) {
 		sprintf(tempstr, "Dur: %i/%i,  ", x->_iDurability, x->_iMaxDur);
 		strcat(sstr, tempstr);
 	} else {
@@ -488,7 +491,10 @@ void PrintStoreItem(ItemStruct *x, int l, char iclr)
 	}
 	if (!x->_itype)
 		sstr[0] = '\0';
-	if (!(x->_iMinStr + x->_iMinMag + x->_iMinDex)) {
+	str = x->_iMinStr;
+	dex = x->_iMinDex;
+	mag = x->_iMinMag;
+	if (!(str + mag + dex)) {
 		strcat(sstr, "No required attributes");
 	} else {
 		strcpy(tempstr, "Required:");
@@ -500,10 +506,10 @@ void PrintStoreItem(ItemStruct *x, int l, char iclr)
 			sprintf(tempstr, "%s %i Dex", tempstr, x->_iMinDex);
 		strcat(sstr, tempstr);
 	}
-	AddSText(40, l, 0, sstr, iclr, 0);
+	AddSText(40, l++, 0, sstr, iclr, 0);
 	if (x->_iMagical == ITEM_QUALITY_UNIQUE) {
 		if (x->_iIdentified)
-			AddSText(40, l + 1, 0, "Unique Item", iclr, 0);
+			AddSText(40, l, 0, "Unique Item", iclr, 0);
 	}
 }
 
@@ -732,7 +738,7 @@ void S_StartSRepair()
 	stextsize = 1;
 	repairok = FALSE;
 	storenumh = 0;
-	for (i = 0; i < 40; i++)
+	for (i = 0; i < 48; i++)
 		storehold[i]._itype = ITYPE_NONE;
 	if (plr[myplr].InvBody[INVLOC_HEAD]._itype != ITYPE_NONE && plr[myplr].InvBody[INVLOC_HEAD]._iDurability != plr[myplr].InvBody[INVLOC_HEAD]._iMaxDur) {
 		repairok = TRUE;
@@ -1372,7 +1378,7 @@ void S_StartTalk()
 #else
 	sn = 0;
 	for (i = 0; i < 16; i++) {
-		if (quests[i]._qlevel == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog)
+		if (quests[i]._qactive == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog)
 			sn++;
 	}
 
@@ -1387,7 +1393,7 @@ void S_StartTalk()
 	sn2 = sn - 2;
 
 	for (i = 0; i < 16; i++) {
-		if (quests[i]._qlevel == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog) {
+		if (quests[i]._qactive == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog) {
 			AddSText(0, sn, 1, questlist[i]._qlstr, COL_WHITE, 1);
 			sn += la;
 		}
@@ -1441,7 +1447,7 @@ void StartStore(char s)
 
 	for (t = s;; t = STORE_SMITH) {
 		sbookflag = FALSE;
-		invflag = 0;
+		invflag = FALSE;
 		chrflag = FALSE;
 		questlog = FALSE;
 		dropGoldFlag = FALSE;
@@ -1841,7 +1847,7 @@ void TakePlrsMoney(int cost)
 			}
 		}
 	}
-	drawpanflag = 255;
+	force_redraw = 255;
 	if (cost > 0) {
 		for (i = 0; i < plr[myplr]._pNumInv && cost > 0; i++) {
 			if (plr[myplr].InvList[i]._itype == ITYPE_GOLD && plr[myplr].InvList[i]._ivalue != GOLD_MAX_LIMIT) {
@@ -1883,8 +1889,8 @@ void SmithBuyItem()
 		plr[myplr].HoldItem._iIdentified = FALSE;
 	StoreAutoPlace();
 	idx = stextvhold + ((stextlhold - stextup) >> 2);
-	if (idx == 19) {
-		smithitem[19]._itype = ITYPE_NONE;
+	if (idx == SMITH_ITEMS - 1) {
+		smithitem[SMITH_ITEMS - 1]._itype = ITYPE_NONE;
 	} else {
 		for (; smithitem[idx + 1]._itype != ITYPE_NONE; idx++) {
 			smithitem[idx] = smithitem[idx + 1];
@@ -1915,7 +1921,7 @@ void S_SBuyEnter()
 			done = FALSE;
 
 			for (i = 0; i < 40 && !done; i++) {
-				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, 0);
+				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, FALSE);
 			}
 			if (done)
 				StartStore(STORE_CONFIRM);
@@ -1976,7 +1982,7 @@ void S_SPBuyEnter()
 			SetCursor_(plr[myplr].HoldItem._iCurs + CURSOR_FIRSTITEM);
 			done = FALSE;
 			for (i = 0; i < 40 && !done; i++) {
-				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, 0);
+				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, FALSE);
 			}
 			if (done)
 				StartStore(STORE_CONFIRM);
@@ -2227,7 +2233,7 @@ void S_WBuyEnter()
 			done = FALSE;
 
 			for (i = 0; i < 40 && !done; i++) {
-				done = SpecialAutoPlace(myplr, i, cursW / 28, cursH / 28, 0);
+				done = SpecialAutoPlace(myplr, i, cursW / 28, cursH / 28, FALSE);
 			}
 
 			if (done)
@@ -2394,7 +2400,7 @@ void S_BBuyEnter()
 			SetCursor_(plr[myplr].HoldItem._iCurs + CURSOR_FIRSTITEM);
 			done = FALSE;
 			for (i = 0; i < 40 && !done; i++) {
-				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, 0);
+				done = AutoPlace(myplr, i, cursW / 28, cursH / 28, FALSE);
 			}
 			if (done)
 				StartStore(STORE_CONFIRM);
@@ -2525,7 +2531,7 @@ void S_HBuyEnter()
 			done = FALSE;
 			i = 0;
 			for (i = 0; i < 40 && !done; i++) {
-				done = SpecialAutoPlace(myplr, i, cursW / 28, cursH / 28, 0);
+				done = SpecialAutoPlace(myplr, i, cursW / 28, cursH / 28, FALSE);
 			}
 			if (done)
 				StartStore(STORE_CONFIRM);
@@ -2588,7 +2594,7 @@ void S_TalkEnter()
 
 	sn = 0;
 	for (i = 0; i < 16; i++) {
-		if (quests[i]._qlevel == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog)
+		if (quests[i]._qactive == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog)
 			sn++;
 	}
 	if (sn > 6) {
@@ -2601,13 +2607,13 @@ void S_TalkEnter()
 
 	if (stextsel == sn - 2) {
 		SetRndSeed(towner[talker]._tSeed);
-		tq = gossipstart + random(0, gossipend - gossipstart + 1);
+		tq = gossipstart + random_(0, gossipend - gossipstart + 1);
 		InitQTextMsg(tq);
 		return;
 	}
 
 	for (i = 0; i < 16; i++) {
-		if (quests[i]._qlevel == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog) {
+		if (quests[i]._qactive == 2 && ((DWORD *)&Qtalklist[talker])[i] != -1 && quests[i]._qlog) {
 			if (sn == stextsel) {
 				InitQTextMsg(((DWORD *)&Qtalklist[talker])[i]);
 			}
@@ -2759,14 +2765,14 @@ void CheckStoreBtn()
 			sfx_stop();
 	} else if (stextsel != -1 && MouseY >= 32 && MouseY <= 320) {
 		if (!stextsize) {
-			if (MouseX < 344 || MouseX > 616)
+			if (MouseX < 344 + PANEL_LEFT || MouseX > 616 + PANEL_LEFT)
 				return;
 		} else {
-			if (MouseX < 24 || MouseX > 616)
+			if (MouseX < 24 + PANEL_LEFT || MouseX > 616 + PANEL_LEFT)
 				return;
 		}
 		y = (MouseY - 32) / 12;
-		if (stextscrl && MouseX > 600) {
+		if (stextscrl && MouseX > 600 + PANEL_LEFT) {
 			if (y == 4) {
 				if (stextscrlubtn <= 0) {
 					STextUp();

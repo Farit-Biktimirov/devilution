@@ -94,14 +94,14 @@ extern DWORD glSeedTbl[NUMLEVELS];
 extern BOOL gbRunGame;
 extern int glMid3Seed[NUMLEVELS];
 extern BOOL gbRunGameResult;
-extern int zoomflag;
+extern BOOL zoomflag;
 extern BOOL gbProcessPlayers;
 extern int glEndSeed[NUMLEVELS];
 extern BOOL gbLoadGame;
 extern HINSTANCE ghInst;
 extern int DebugMonsters[10];
 extern BOOLEAN cineflag;
-extern int drawpanflag;
+extern int force_redraw;
 extern BOOL visiondebug;
 extern BOOL scrollflag; /* unused */
 extern BOOL light4flag;

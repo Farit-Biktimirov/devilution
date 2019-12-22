@@ -170,7 +170,7 @@ void CheckRportal()
 
 void CheckCursMove()
 {
-	int i, sx, sy, mx, my, tx, ty, px, py, xx, yy, mi;
+	int i, sx, sy, fx, fy, mx, my, tx, ty, px, py, xx, yy, mi;
 	char bv;
 	BOOL flipflag, flipx, flipy;
 
@@ -201,9 +201,14 @@ void CheckCursMove()
 	sx -= ScrollInfo._sxoff;
 	sy -= ScrollInfo._syoff;
 
+	fx = plr[myplr]._pVar6 >> 8;
+	fy = plr[myplr]._pVar7 >> 8;
+	fx -= (plr[myplr]._pVar6 + plr[myplr]._pxvel) >> 8;
+	fy -= (plr[myplr]._pVar7 + plr[myplr]._pyvel) >> 8;
+
 	if (ScrollInfo._sdir != 0) {
-		sx += ((plr[myplr]._pVar6 + plr[myplr]._pxvel) >> 8) - (plr[myplr]._pVar6 >> 8);
-		sy += ((plr[myplr]._pVar7 + plr[myplr]._pyvel) >> 8) - (plr[myplr]._pVar7 >> 8);
+		sx -= fx;
+		sy -= fy;
 	}
 
 	if (sx < 0) {
@@ -223,10 +228,10 @@ void CheckCursMove()
 	ty = sy >> 5;
 	px = sx & 0x3F;
 	py = sy & 0x1F;
-	mx = ViewX + tx + ty - (zoomflag ? 10 : 5);
+	mx = ViewX + tx + ty - (zoomflag ? (SCREEN_WIDTH / 64) : (SCREEN_WIDTH / 2 / 64));
 	my = ViewY + ty - tx;
 
-	flipy = py<px>> 1;
+	flipy = py < (px >> 1);
 	if (flipy) {
 		my--;
 	}
@@ -278,11 +283,11 @@ void CheckCursMove()
 	if (doomflag) {
 		return;
 	}
-	if (invflag && MouseX > 320) {
+	if (invflag && MouseX > RIGHT_PANEL) {
 		pcursinvitem = CheckInvHLight();
 		return;
 	}
-	if (sbookflag && MouseX > 320) {
+	if (sbookflag && MouseX > RIGHT_PANEL) {
 		return;
 	}
 	if ((chrflag || questlog) && MouseX < 320) {

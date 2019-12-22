@@ -301,7 +301,8 @@ void multi_net_ping()
 
 int multi_handle_delta()
 {
-	int i, received;
+	int i;
+	BOOL received;
 
 	if (gbGameDestroyed) {
 		gbRunGame = FALSE;
@@ -350,7 +351,7 @@ void multi_mon_seeds()
 
 	sgdwGameLoops++;
 	l = _rotr(sgdwGameLoops, 8);
-	for (i = 0; i < 200; i++)
+	for (i = 0; i < MAXMONSTERS; i++)
 		monster[i]._mAISeed = l + i;
 }
 
@@ -543,7 +544,7 @@ void multi_send_zero_packet(int pnum, BYTE bCmd, BYTE *pbSrc, DWORD dwLen)
 
 	dwOffset = 0;
 
-	while(dwLen != 0) {
+	while (dwLen != 0) {
 		pkt.hdr.wCheck = 'ip';
 		pkt.hdr.px = 0;
 		pkt.hdr.py = 0;
@@ -558,7 +559,7 @@ void multi_send_zero_packet(int pnum, BYTE bCmd, BYTE *pbSrc, DWORD dwLen)
 		p->bCmd = bCmd;
 		p->wOffset = dwOffset;
 		dwBody = gdwLargestMsgSize - sizeof(pkt.hdr) - sizeof(*p);
-		if(dwLen < dwBody) {
+		if (dwLen < dwBody) {
 			dwBody = dwLen;
 		}
 		/// ASSERT: assert(dwBody <= 0x0ffff);
@@ -568,7 +569,7 @@ void multi_send_zero_packet(int pnum, BYTE bCmd, BYTE *pbSrc, DWORD dwLen)
 		dwMsg += sizeof(*p);
 		dwMsg += p->wBytes;
 		pkt.hdr.wLen = dwMsg;
-		if(!SNetSendMessage(pnum, &pkt, dwMsg)) {
+		if (!SNetSendMessage(pnum, &pkt, dwMsg)) {
 			nthread_terminate_game("SNetSendMessage2");
 			return;
 		}
@@ -690,7 +691,7 @@ BOOL NetInit(BOOL bSinglePlayer, BOOL *pfExitProgram)
 		ProgramData.versionid = 42;
 		ProgramData.maxplayers = MAX_PLRS;
 		ProgramData.initdata = &sgGameInitInfo;
-		ProgramData.initdatabytes = 8;
+		ProgramData.initdatabytes = sizeof(sgGameInitInfo);
 		ProgramData.optcategorybits = 15;
 		ProgramData.lcid = 1033; /* LANG_ENGLISH */
 		memset(&plrdata, 0, sizeof(plrdata));
@@ -850,7 +851,7 @@ BOOL multi_init_single(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info
 	return TRUE;
 }
 
-BOOL multi_init_multi(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info, _SNETUIDATA *ui_info, int *pfExitProgram)
+BOOL multi_init_multi(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info, _SNETUIDATA *ui_info, BOOL *pfExitProgram)
 {
 	BOOL first;
 	int playerId;
@@ -889,7 +890,7 @@ BOOL multi_init_multi(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info,
 	}
 }
 
-BOOL multi_upgrade(int *pfExitProgram)
+BOOL multi_upgrade(BOOL *pfExitProgram)
 {
 	BOOL result;
 	int status;
@@ -939,7 +940,7 @@ void recv_plrinfo(int pnum, TCmdPlrInfoHdr *p, BOOL recv)
 	sgwPackPlrOffsetTbl[pnum] = 0;
 	multi_player_left_msg(pnum, 0);
 	plr[pnum]._pGFXLoad = 0;
-	UnPackPlayer(&netplr[pnum], pnum, 1);
+	UnPackPlayer(&netplr[pnum], pnum, TRUE);
 
 	if (!recv) {
 #ifdef _DEBUG

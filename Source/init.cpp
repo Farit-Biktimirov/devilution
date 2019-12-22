@@ -155,7 +155,7 @@ void init_create_window(int nCmdShow)
 	wcex.hIcon = LoadIcon(ghInst, MAKEINTRESOURCE(IDI_ICON1));
 	wcex.hCursor = LoadCursor(0, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wcex.lpszMenuName = "DIABLO";
+	wcex.lpszMenuName = GAME_NAME;
 	wcex.lpszClassName = "DIABLO";
 	wcex.hIconSm = (HICON)LoadImage(ghInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	if (!RegisterClassEx(&wcex))
@@ -168,7 +168,7 @@ void init_create_window(int nCmdShow)
 		nHeight = SCREEN_HEIGHT;
 	else
 		nHeight = GetSystemMetrics(SM_CYSCREEN);
-	hWnd = CreateWindowEx(0, "DIABLO", "DIABLO", WS_POPUP, 0, 0, nWidth, nHeight, NULL, NULL, ghInst, NULL);
+	hWnd = CreateWindowEx(0, "DIABLO", GAME_NAME, WS_POPUP, 0, 0, nWidth, nHeight, NULL, NULL, ghInst, NULL);
 	if (!hWnd)
 		app_fatal("Unable to create main window");
 	ShowWindow(hWnd, SW_SHOWNORMAL); // nCmdShow used only in beta: ShowWindow(hWnd, nCmdShow)
@@ -241,9 +241,9 @@ void init_archives()
 		diabdat_mpq = init_test_access(diabdat_mpq_path, "\\spawn.mpq", "DiabloSpawn", 1000, FS_PC);
 #else
 #ifdef COPYPROT
-		diabdat_mpq = init_test_access(diabdat_mpq_path, "\\diabdat.mpq", "DiabloCD", 1000, FS_CD);
+	diabdat_mpq = init_test_access(diabdat_mpq_path, "\\diabdat.mpq", "DiabloCD", 1000, FS_CD);
 #else
-		diabdat_mpq = init_test_access(diabdat_mpq_path, "\\diabdat.mpq", "DiabloCD", 1000, FS_PC);
+	diabdat_mpq = init_test_access(diabdat_mpq_path, "\\diabdat.mpq", "DiabloCD", 1000, FS_PC);
 #endif
 #endif
 #ifdef COPYPROT
@@ -268,7 +268,7 @@ void init_archives()
 #endif
 }
 
-HANDLE init_test_access(char *mpq_path, char *mpq_name, char *reg_loc, int flags, int fs)
+HANDLE init_test_access(char *mpq_path, char *mpq_name, char *reg_loc, int dwPriority, int fs)
 {
 	char *last_slash_pos;
 	char Filename[MAX_PATH];
@@ -289,12 +289,12 @@ HANDLE init_test_access(char *mpq_path, char *mpq_name, char *reg_loc, int flags
 	init_strip_trailing_slash(Filename);
 	strcpy(mpq_path, Buffer);
 	strcat(mpq_path, mpq_name);
-	if (SFileOpenArchive(mpq_path, flags, fs, &archive))
+	if (SFileOpenArchive(mpq_path, dwPriority, fs, &archive))
 		return archive;
 	if (strcmp(Filename, Buffer)) {
 		strcpy(mpq_path, Filename);
 		strcat(mpq_path, mpq_name);
-		if (SFileOpenArchive(mpq_path, flags, fs, &archive))
+		if (SFileOpenArchive(mpq_path, dwPriority, fs, &archive))
 			return archive;
 	}
 	archive_path[0] = '\0';
@@ -303,11 +303,11 @@ HANDLE init_test_access(char *mpq_path, char *mpq_name, char *reg_loc, int flags
 			init_strip_trailing_slash(archive_path);
 			strcpy(mpq_path, archive_path);
 			strcat(mpq_path, mpq_name);
-			if (SFileOpenArchive(mpq_path, flags, fs, &archive))
+			if (SFileOpenArchive(mpq_path, dwPriority, fs, &archive))
 				return archive;
 		}
 	}
-	if (fs != FS_PC && init_read_test_file(archive_path, mpq_name, flags, &archive)) {
+	if (fs != FS_PC && init_read_test_file(archive_path, mpq_name, dwPriority, &archive)) {
 		strcpy(mpq_path, archive_path);
 		return archive;
 	}
@@ -326,7 +326,7 @@ char *init_strip_trailing_slash(char *path)
 	return result;
 }
 
-BOOL init_read_test_file(char *pszPath, char *pszArchive, int flags, HANDLE *phArchive)
+BOOL init_read_test_file(char *pszPath, char *pszArchive, int dwPriority, HANDLE *phArchive)
 {
 	DWORD dwSize;
 	char *pszDrive, *pszRoot;
@@ -352,7 +352,7 @@ BOOL init_read_test_file(char *pszPath, char *pszArchive, int flags, HANDLE *phA
 		if (GetDriveType(pszRoot) == DRIVE_CDROM) {
 			strcpy(pszPath, pszRoot);
 			strcat(pszPath, pszArchive);
-			if (SFileOpenArchive(pszPath, flags, FS_CD, phArchive)) {
+			if (SFileOpenArchive(pszPath, dwPriority, FS_CD, phArchive)) {
 				break;
 			}
 		}
@@ -400,12 +400,12 @@ LRESULT __stdcall MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 		ghMainWnd = hWnd;
 		break;
 	case WM_DESTROY:
-		init_cleanup(1);
+		init_cleanup(TRUE);
 		ghMainWnd = 0;
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
-		drawpanflag = 255;
+		force_redraw = 255;
 		break;
 	case WM_CLOSE:
 		return 0;
@@ -449,7 +449,7 @@ void init_activate_window(HWND hWnd, BOOL bActive)
 	SetWindowLong(hWnd, GWL_STYLE, dwNewLong);
 
 	if (gbActive) {
-		drawpanflag = 255;
+		force_redraw = 255;
 		ResetPal();
 	}
 }

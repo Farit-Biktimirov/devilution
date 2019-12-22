@@ -450,7 +450,7 @@ void DrawHelp()
 
 	DrawSTextHelp();
 	DrawQTextBack();
-	PrintSString(0, 2, 1, "Diablo Help", COL_GOLD, 0);
+	PrintSString(0, 2, TRUE, "Diablo Help", COL_GOLD, 0);
 	DrawSLine(5);
 
 	s = gszHelpText;
@@ -528,7 +528,7 @@ void DrawHelp()
 		}
 	}
 
-	PrintSString(0, 23, 1, "Press ESC to end or the arrow keys to scroll.", COL_GOLD, 0);
+	PrintSString(0, 23, TRUE, "Press ESC to end or the arrow keys to scroll.", COL_GOLD, 0);
 }
 
 void DrawHelpLine(int always_0, int help_line_nr, char *text, char color)
@@ -537,7 +537,7 @@ void DrawHelpLine(int always_0, int help_line_nr, char *text, char color)
 	BYTE c;
 
 	width = 0;
-	off = PitchTbl[SStringY[help_line_nr] + 204] + always_0 + 96;
+	off = PitchTbl[SStringY[help_line_nr] + 204] + always_0 + 96 + PANEL_LEFT;
 	while (*text) {
 		c = gbFontTransTbl[(BYTE)*text];
 		text++;

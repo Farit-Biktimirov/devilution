@@ -6,7 +6,7 @@ char gszHero[16];
 
 /* data */
 
-int menu_music_track_id = 5;
+int menu_music_track_id = TMUSIC_INTRO;
 
 void mainmenu_refresh_music()
 {
@@ -14,9 +14,9 @@ void mainmenu_refresh_music()
 #ifndef SPAWN
 	do {
 		menu_music_track_id++;
-		if (menu_music_track_id == 6)
-			menu_music_track_id = 0;
-	} while (!menu_music_track_id || menu_music_track_id == 1);
+		if (menu_music_track_id == NUM_MUSIC)
+			menu_music_track_id = TMUSIC_TOWN;
+	} while (menu_music_track_id == TMUSIC_TOWN || menu_music_track_id == TMUSIC_L1);
 #endif
 }
 
@@ -157,7 +157,7 @@ BOOL mainmenu_multi_player()
 void mainmenu_play_intro()
 {
 	music_stop();
-	play_movie("gendata\\diablo1.smk", 1);
+	play_movie("gendata\\diablo1.smk", TRUE);
 	mainmenu_refresh_music();
 }
 #endif

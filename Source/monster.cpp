@@ -11,8 +11,7 @@ int nummonsters;
 BOOLEAN sgbSaveSoundOn;
 MonsterStruct monster[MAXMONSTERS];
 int totalmonsters;
-CMonster Monsters[16];
-// int END_Monsters_17;
+CMonster Monsters[MAX_LVLMTYPES];
 int monstimgtot;
 int uniquetrans;
 int nummtypes;
@@ -93,7 +92,7 @@ void (*AiProc[])(int i) = {
 	&MAI_Lazurus,
 	&MAI_Lazhelp,
 	&MAI_Lachdanan,
-	&MAI_Warlord
+	&MAI_Warlord,
 };
 
 void InitMonsterTRN(int monst, BOOL special)
@@ -229,11 +228,11 @@ void GetLevelMTypes()
 					}
 				}
 			}
-			AddMonsterType(skeltypes[random(88, nt)], 1);
+			AddMonsterType(skeltypes[random_(88, nt)], 1);
 		}
 
 		nt = 0;
-		for (i = 0; i < 111; i++) {
+		for (i = 0; i < NUM_MTYPES; i++) {
 			minl = 15 * monsterdata[i].mMinDLvl / 30 + 1;
 			maxl = 15 * monsterdata[i].mMaxDLvl / 30 + 1;
 
@@ -260,7 +259,7 @@ void GetLevelMTypes()
 				}
 
 				if (nt != 0) {
-					i = random(88, nt);
+					i = random_(88, nt);
 					AddMonsterType(typelist[i], 1);
 					typelist[i] = typelist[--nt];
 				}
@@ -328,34 +327,22 @@ void InitMonsterGFX(int monst)
 		MissileFileFlag |= 2;
 		LoadMissileGFX(MFILE_THINLGHT);
 	}
-	if (mtype == MT_SUCCUBUS) {
-		if (MissileFileFlag & 4)
-			return;
-
+	if (mtype == MT_SUCCUBUS && !(MissileFileFlag & 4)) {
 		MissileFileFlag |= 4;
 		LoadMissileGFX(MFILE_FLARE);
 		LoadMissileGFX(MFILE_FLAREEXP);
 	}
-	if (mtype == MT_SNOWWICH) {
-		if (MissileFileFlag & 0x20)
-			return;
-
+	if (mtype == MT_SNOWWICH && !(MissileFileFlag & 0x20)) {
 		MissileFileFlag |= 0x20;
 		LoadMissileGFX(MFILE_SCUBMISB);
 		LoadMissileGFX(MFILE_SCBSEXPB);
 	}
-	if (mtype == MT_HLSPWN) {
-		if (MissileFileFlag & 0x40)
-			return;
-
+	if (mtype == MT_HLSPWN && !(MissileFileFlag & 0x40)) {
 		MissileFileFlag |= 0x40;
 		LoadMissileGFX(MFILE_SCUBMISD);
 		LoadMissileGFX(MFILE_SCBSEXPD);
 	}
-	if (mtype == MT_SOLBRNR) {
-		if (MissileFileFlag & 0x80)
-			return;
-
+	if (mtype == MT_SOLBRNR && !(MissileFileFlag & 0x80)) {
 		MissileFileFlag |= 0x80;
 		LoadMissileGFX(MFILE_SCUBMISC);
 		LoadMissileGFX(MFILE_SCBSEXPC);
@@ -398,21 +385,21 @@ void InitMonster(int i, int rd, int mtype, int x, int y)
 	monster[i]._mfuty = y;
 	monster[i]._moldx = x;
 	monster[i]._moldy = y;
-	monster[i]._mmode = MM_STAND;
 	monster[i]._mMTidx = mtype;
+	monster[i]._mmode = MM_STAND;
 	monster[i].mName = monst->MData->mName;
 	monster[i].MType = monst;
 	monster[i].MData = monst->MData;
 	monster[i]._mAnimData = monst->Anims[MA_STAND].Data[rd];
 	monster[i]._mAnimDelay = monst->Anims[MA_STAND].Rate;
-	monster[i]._mAnimCnt = random(88, monst->Anims[MA_STAND].Rate - 1);
+	monster[i]._mAnimCnt = random_(88, monster[i]._mAnimDelay - 1);
 	monster[i]._mAnimLen = monst->Anims[MA_STAND].Frames;
-	monster[i]._mAnimFrame = random(88, monst->Anims[MA_STAND].Frames - 1) + 1;
+	monster[i]._mAnimFrame = random_(88, monster[i]._mAnimLen - 1) + 1;
 
 	if (monst->mtype == MT_DIABLO) {
-		monster[i]._mmaxhp = (random(88, 1) + 1666) << 6;
+		monster[i]._mmaxhp = (random_(88, 1) + 1666) << 6;
 	} else {
-		monster[i]._mmaxhp = (monst->mMinHP + random(88, monst->mMaxHP - monst->mMinHP + 1)) << 6;
+		monster[i]._mmaxhp = (monst->mMinHP + random_(88, monst->mMaxHP - monst->mMinHP + 1)) << 6;
 	}
 
 	if (gbMaxPlayers == 1) {
@@ -429,11 +416,11 @@ void InitMonster(int i, int rd, int mtype, int x, int y)
 	monster[i]._mgoalvar1 = 0;
 	monster[i]._mgoalvar2 = 0;
 	monster[i]._mgoalvar3 = 0;
+	monster[i].field_18 = 0;
 	monster[i]._pathcount = 0;
+	monster[i]._mDelFlag = FALSE;
 	monster[i]._uniqtype = 0;
 	monster[i]._msquelch = 0;
-	monster[i].field_18 = 0;
-	monster[i]._mDelFlag = FALSE;
 	monster[i]._mRndSeed = GetRndSeed();
 	monster[i]._mAISeed = GetRndSeed();
 	monster[i].mWhoHit = 0;
@@ -460,28 +447,28 @@ void InitMonster(int i, int rd, int mtype, int x, int y)
 	}
 
 	if (gnDifficulty == DIFF_NIGHTMARE) {
-		monster[i].mLevel += 15;
-		monster[i].mHit += 85;
-		monster[i].mHit2 += 85;
 		monster[i]._mmaxhp = 3 * monster[i]._mmaxhp + 64;
 		monster[i]._mhitpoints = monster[i]._mmaxhp;
+		monster[i].mLevel += 15;
 		monster[i].mExp = 2 * (monster[i].mExp + 1000);
+		monster[i].mHit += 85;
 		monster[i].mMinDamage = 2 * (monster[i].mMinDamage + 2);
 		monster[i].mMaxDamage = 2 * (monster[i].mMaxDamage + 2);
+		monster[i].mHit2 += 85;
 		monster[i].mMinDamage2 = 2 * (monster[i].mMinDamage2 + 2);
 		monster[i].mMaxDamage2 = 2 * (monster[i].mMaxDamage2 + 2);
 		monster[i].mArmorClass += 50;
 	}
 
 	if (gnDifficulty == DIFF_HELL) {
-		monster[i].mLevel += 30;
 		monster[i]._mmaxhp = 4 * monster[i]._mmaxhp + 192;
 		monster[i]._mhitpoints = monster[i]._mmaxhp;
-		monster[i].mHit += 120;
-		monster[i].mHit2 += 120;
+		monster[i].mLevel += 30;
 		monster[i].mExp = 4 * (monster[i].mExp + 1000);
+		monster[i].mHit += 120;
 		monster[i].mMinDamage = 4 * monster[i].mMinDamage + 6;
 		monster[i].mMaxDamage = 4 * monster[i].mMaxDamage + 6;
+		monster[i].mHit2 += 120;
 		monster[i].mMinDamage2 = 4 * monster[i].mMinDamage2 + 6;
 		monster[i].mMaxDamage2 = 4 * monster[i].mMaxDamage2 + 6;
 		monster[i].mArmorClass += 80;
@@ -508,7 +495,7 @@ void ClrAllMonsters()
 		Monst->_mfuty = 0;
 		Monst->_moldx = 0;
 		Monst->_moldy = 0;
-		Monst->_mdir = random(89, 8);
+		Monst->_mdir = random_(89, 8);
 		Monst->_mxvel = 0;
 		Monst->_myvel = 0;
 		Monst->_mAnimData = NULL;
@@ -518,7 +505,7 @@ void ClrAllMonsters()
 		Monst->_mAnimFrame = 0;
 		Monst->_mFlags = 0;
 		Monst->_mDelFlag = FALSE;
-		Monst->_menemy = random(89, gbActivePlayers);
+		Monst->_menemy = random_(89, gbActivePlayers);
 		Monst->_menemyx = plr[Monst->_menemy]._px;
 		Monst->_menemyy = plr[Monst->_menemy]._py;
 	}
@@ -554,7 +541,7 @@ void PlaceMonster(int i, int mtype, int x, int y)
 
 	dMonster[x][y] = i + 1;
 
-	rd = random(90, 8);
+	rd = random_(90, 8);
 	InitMonster(i, rd, mtype, x, y);
 }
 
@@ -585,8 +572,8 @@ void PlaceUniqueMonst(int uniqindex, int miniontype, int unpackfilesize)
 	}
 
 	while (1) {
-		xp = random(91, 80) + 16;
-		yp = random(91, 80) + 16;
+		xp = random_(91, 80) + 16;
+		yp = random_(91, 80) + 16;
 		count2 = 0;
 		for (x = xp - 3; x < xp + 3; x++) {
 			for (y = yp - 3; y < yp + 3; y++) {
@@ -608,15 +595,15 @@ void PlaceUniqueMonst(int uniqindex, int miniontype, int unpackfilesize)
 		}
 	}
 
-	if (uniqindex == 3) {
+	if (uniqindex == UMT_SNOTSPIL) {
 		xp = 2 * setpc_x + 24;
 		yp = 2 * setpc_y + 28;
 	}
-	if (uniqindex == 8) {
+	if (uniqindex == UMT_WARLORD) {
 		xp = 2 * setpc_x + 22;
 		yp = 2 * setpc_y + 23;
 	}
-	if (uniqindex == 2) {
+	if (uniqindex == UMT_ZHAR) {
 		zharflag = TRUE;
 		for (i = 0; i < themeCount; i++) {
 			if (i == zharlib && zharflag == TRUE) {
@@ -627,37 +614,37 @@ void PlaceUniqueMonst(int uniqindex, int miniontype, int unpackfilesize)
 		}
 	}
 	if (gbMaxPlayers == 1) {
-		if (uniqindex == 4) {
+		if (uniqindex == UMT_LAZURUS) {
 			xp = 32;
 			yp = 46;
 		}
-		if (uniqindex == 5) {
+		if (uniqindex == UMT_RED_VEX) {
 			xp = 40;
 			yp = 45;
 		}
-		if (uniqindex == 6) {
+		if (uniqindex == UMT_BLACKJADE) {
 			xp = 38;
 			yp = 49;
 		}
-		if (uniqindex == 1) {
+		if (uniqindex == UMT_SKELKING) {
 			xp = 35;
 			yp = 47;
 		}
 	} else {
-		if (uniqindex == 4) {
+		if (uniqindex == UMT_LAZURUS) {
 			xp = 2 * setpc_x + 19;
 			yp = 2 * setpc_y + 22;
 		}
-		if (uniqindex == 5) {
+		if (uniqindex == UMT_RED_VEX) {
 			xp = 2 * setpc_x + 21;
 			yp = 2 * setpc_y + 19;
 		}
-		if (uniqindex == 6) {
+		if (uniqindex == UMT_BLACKJADE) {
 			xp = 2 * setpc_x + 21;
 			yp = 2 * setpc_y + 25;
 		}
 	}
-	if (uniqindex == 9) {
+	if (uniqindex == UMT_BUTCHER) {
 		done = FALSE;
 		for (yp = 0; yp < MAXDUNY && !done; yp++) {
 			for (xp = 0; xp < MAXDUNX && !done; xp++) {
@@ -758,7 +745,7 @@ void PlaceUniqueMonst(int uniqindex, int miniontype, int unpackfilesize)
 
 	if (Monst->_mAi != AI_GARG) {
 		Monst->_mAnimData = Monst->MType->Anims[MA_STAND].Data[Monst->_mdir];
-		Monst->_mAnimFrame = random(88, Monst->_mAnimLen - 1) + 1;
+		Monst->_mAnimFrame = random_(88, Monst->_mAnimLen - 1) + 1;
 		Monst->_mFlags &= ~MFLAG_ALLOW_SPECIAL;
 		Monst->_mmode = MM_STAND;
 	}
@@ -849,22 +836,14 @@ void PlaceGroup(int mtype, int num, int leaderf, int leader)
 			dMonster[monster[nummonsters]._mx][monster[nummonsters]._my] = 0;
 		}
 
-		x1 = 0;
-		y1 = 0;
-		xp = 0;
-		yp = 0;
 		if (leaderf & 1) {
-			int offset = random(92, 8);
-			xp = monster[leader]._mx + offset_x[offset];
-			yp = monster[leader]._my + offset_y[offset];
-			x1 = xp;
-			y1 = yp;
+			int offset = random_(92, 8);
+			x1 = xp = monster[leader]._mx + offset_x[offset];
+			y1 = yp = monster[leader]._my + offset_y[offset];
 		} else {
 			do {
-				xp = random(93, 80) + 16;
-				x1 = xp;
-				yp = random(93, 80) + 16;
-				y1 = yp;
+				x1 = xp = random_(93, 80) + 16;
+				y1 = yp = random_(93, 80) + 16;
 			} while (!MonstPlace(xp, yp));
 		}
 
@@ -873,7 +852,7 @@ void PlaceGroup(int mtype, int num, int leaderf, int leader)
 		}
 
 		j = 0;
-		for (try2 = 0; j < num && try2 < 100; xp += offset_x[random(94, 8)], yp += offset_x[random(94, 8)]) {
+		for (try2 = 0; j < num && try2 < 100; xp += offset_x[random_(94, 8)], yp += offset_x[random_(94, 8)]) {
 			if (!MonstPlace(xp, yp)
 			    || (dTransVal[xp][yp] != dTransVal[x1][y1])
 			    || (leaderf & 2) && ((abs(xp - x1) >= 4) || (abs(yp - y1) >= 4))) {
@@ -895,7 +874,7 @@ void PlaceGroup(int mtype, int num, int leaderf, int leader)
 
 				if (monster[nummonsters]._mAi != AI_GARG) {
 					monster[nummonsters]._mAnimData = monster[nummonsters].MType->Anims[MA_STAND].Data[monster[nummonsters]._mdir];
-					monster[nummonsters]._mAnimFrame = random(88, monster[nummonsters]._mAnimLen - 1) + 1;
+					monster[nummonsters]._mAnimFrame = random_(88, monster[nummonsters]._mAnimLen - 1) + 1;
 					monster[nummonsters]._mFlags &= ~MFLAG_ALLOW_SPECIAL;
 					monster[nummonsters]._mmode = MM_STAND;
 				}
@@ -942,7 +921,7 @@ void InitMonsters()
 	int numplacemonsters;
 	int mtype;
 	int numscattypes;
-	int scattertypes[111];
+	int scattertypes[NUM_MTYPES];
 
 	numscattypes = 0;
 	if (gbMaxPlayers != 1)
@@ -952,11 +931,11 @@ void InitMonsters()
 		AddMonster(1, 0, 0, 0, FALSE);
 		AddMonster(1, 0, 0, 0, FALSE);
 		AddMonster(1, 0, 0, 0, FALSE);
-#ifndef SPAWN
-		if (!setlevel && currlevel == 16)
-			LoadDiabMonsts();
-#endif
 	}
+#ifndef SPAWN
+	if (!setlevel && currlevel == 16)
+		LoadDiabMonsts();
+#endif
 	nt = numtrigs;
 	if (currlevel == 15)
 		nt = 1;
@@ -991,13 +970,13 @@ void InitMonsters()
 			}
 		}
 		while (nummonsters < totalmonsters) {
-			mtype = scattertypes[random(95, numscattypes)];
-			if (currlevel == 1 || random(95, 2) == 0)
+			mtype = scattertypes[random_(95, numscattypes)];
+			if (currlevel == 1 || random_(95, 2) == 0)
 				na = 1;
 			else if (currlevel == 2)
-				na = random(95, 2) + 2;
+				na = random_(95, 2) + 2;
 			else
-				na = random(95, 3) + 3;
+				na = random_(95, 3) + 3;
 			PlaceGroup(mtype, na, 0, 0);
 		}
 	}
@@ -1104,14 +1083,14 @@ int AddMonster(int x, int y, int dir, int mtype, BOOL InMap)
 	return -1;
 }
 
-void NewMonsterAnim(int i, AnimStruct *anim, int md)
+void NewMonsterAnim(int i, AnimStruct &anim, int md)
 {
 	MonsterStruct *Monst = monster + i;
-	Monst->_mAnimData = anim->Data[md];
-	Monst->_mAnimLen = anim->Frames;
+	Monst->_mAnimData = anim.Data[md];
+	Monst->_mAnimLen = anim.Frames;
 	Monst->_mAnimCnt = 0;
 	Monst->_mAnimFrame = 1;
-	Monst->_mAnimDelay = anim->Rate;
+	Monst->_mAnimDelay = anim.Rate;
 	Monst->_mFlags &= ~(MFLAG_LOCK_ANIMATION | MFLAG_ALLOW_SPECIAL);
 	Monst->_mdir = md;
 }
@@ -1227,6 +1206,7 @@ void M_CheckEFlag(int i)
 	x = monster[i]._mx - 1;
 	y = monster[i]._my + 1;
 	f = 0;
+	// BUGFIX check (x > 0 && y < MAXDUNY)
 	m = dpiece_defs_map_2[x][y].mt;
 	if (m >= dpiece_defs_map_2[0][0].mt) {
 		for (j = 2; j < 10; j++) {
@@ -1248,9 +1228,9 @@ void M_StartStand(int i, int md)
 {
 	ClearMVars(i);
 	if (monster[i].MType->mtype == MT_GOLEM)
-		NewMonsterAnim(i, &monster[i].MType->Anims[MA_WALK], md);
+		NewMonsterAnim(i, monster[i].MType->Anims[MA_WALK], md);
 	else
-		NewMonsterAnim(i, &monster[i].MType->Anims[MA_STAND], md);
+		NewMonsterAnim(i, monster[i].MType->Anims[MA_STAND], md);
 	monster[i]._mVar1 = monster[i]._mmode;
 	monster[i]._mVar2 = 0;
 	monster[i]._mmode = MM_STAND;
@@ -1279,7 +1259,7 @@ void M_StartDelay(int i, int len)
 
 void M_StartSpStand(int i, int md)
 {
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], md);
 	monster[i]._mmode = MM_SPSTAND;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1308,7 +1288,7 @@ void M_StartWalk(int i, int xvel, int yvel, int xadd, int yadd, int EndDir)
 	monster[i]._mVar2 = yadd;
 	monster[i]._mVar3 = EndDir;
 	monster[i]._mdir = EndDir;
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_WALK], EndDir);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_WALK], EndDir);
 	monster[i]._mVar6 = 0;
 	monster[i]._mVar7 = 0;
 	monster[i]._mVar8 = 0;
@@ -1339,7 +1319,7 @@ void M_StartWalk2(int i, int xvel, int yvel, int xoff, int yoff, int xadd, int y
 	monster[i]._myvel = yvel;
 	monster[i]._mVar3 = EndDir;
 	monster[i]._mdir = EndDir;
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_WALK], EndDir);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_WALK], EndDir);
 	monster[i]._mVar6 = 16 * xoff;
 	monster[i]._mVar7 = 16 * yoff;
 	monster[i]._mVar8 = 0;
@@ -1374,7 +1354,7 @@ void M_StartWalk3(int i, int xvel, int yvel, int xoff, int yoff, int xadd, int y
 	monster[i]._mVar2 = fy;
 	monster[i]._mVar3 = EndDir;
 	monster[i]._mdir = EndDir;
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_WALK], EndDir);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_WALK], EndDir);
 	monster[i]._mVar6 = 16 * xoff;
 	monster[i]._mVar7 = 16 * yoff;
 	monster[i]._mVar8 = 0;
@@ -1384,7 +1364,7 @@ void M_StartWalk3(int i, int xvel, int yvel, int xoff, int yoff, int xadd, int y
 void M_StartAttack(int i)
 {
 	int md = M_GetDir(i);
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_ATTACK], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_ATTACK], md);
 	monster[i]._mmode = MM_ATTACK;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1399,7 +1379,7 @@ void M_StartAttack(int i)
 void M_StartRAttack(int i, int missile_type, int dam)
 {
 	int md = M_GetDir(i);
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_ATTACK], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_ATTACK], md);
 	monster[i]._mmode = MM_RATTACK;
 	monster[i]._mVar1 = missile_type;
 	monster[i]._mVar2 = dam;
@@ -1416,7 +1396,7 @@ void M_StartRAttack(int i, int missile_type, int dam)
 void M_StartRSpAttack(int i, int missile_type, int dam)
 {
 	int md = M_GetDir(i);
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], md);
 	monster[i]._mmode = MM_RSPATTACK;
 	monster[i]._mVar1 = missile_type;
 	monster[i]._mVar2 = 0;
@@ -1434,7 +1414,7 @@ void M_StartRSpAttack(int i, int missile_type, int dam)
 void M_StartSpAttack(int i)
 {
 	int md = M_GetDir(i);
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], md);
 	monster[i]._mmode = MM_SATTACK;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1448,7 +1428,7 @@ void M_StartSpAttack(int i)
 
 void M_StartEat(int i)
 {
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], monster[i]._mdir);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], monster[i]._mdir);
 	monster[i]._mmode = MM_SATTACK;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1490,14 +1470,17 @@ void M_GetKnockback(int i)
 		M_ClearSquares(i);
 		monster[i]._moldx += offset_x[d];
 		monster[i]._moldy += offset_y[d];
-		NewMonsterAnim(i, &monster[i].MType->Anims[MA_GOTHIT], monster[i]._mdir);
+		NewMonsterAnim(i, monster[i].MType->Anims[MA_GOTHIT], monster[i]._mdir);
 		monster[i]._mmode = MM_GOTHIT;
 		monster[i]._mxoff = 0;
 		monster[i]._myoff = 0;
 		monster[i]._mx = monster[i]._moldx;
 		monster[i]._my = monster[i]._moldy;
-		monster[i]._mfutx = monster[i]._moldx;
-		monster[i]._mfuty = monster[i]._moldy;
+		monster[i]._mfutx = monster[i]._mx;
+		monster[i]._mfuty = monster[i]._my;
+		// BUGFIX useless assignment
+		monster[i]._moldx = monster[i]._mx;
+		monster[i]._moldy = monster[i]._my;
 		M_CheckEFlag(i);
 		M_ClearSquares(i);
 		dMonster[monster[i]._mx][monster[i]._my] = i + 1;
@@ -1527,7 +1510,7 @@ void M_StartHit(int i, int pnum, int dam)
 			monster[i]._mgoal = MGOAL_NORMAL;
 		}
 		if (monster[i]._mmode != MM_STONE) {
-			NewMonsterAnim(i, &monster[i].MType->Anims[MA_GOTHIT], monster[i]._mdir);
+			NewMonsterAnim(i, monster[i].MType->Anims[MA_GOTHIT], monster[i]._mdir);
 			monster[i]._mmode = MM_GOTHIT;
 			monster[i]._mxoff = 0;
 			monster[i]._myoff = 0;
@@ -1564,7 +1547,7 @@ void M_DiabloDeath(int i, BOOL sendmsg)
 			continue;
 
 		pmonster = monster + k;
-		NewMonsterAnim(k, pmonster->MType->Anims + MA_DEATH, pmonster->_mdir);
+		NewMonsterAnim(k, pmonster->MType->Anims[MA_DEATH], pmonster->_mdir);
 		monster[k]._mxoff = 0;
 		monster[k]._myoff = 0;
 		monster[k]._mVar1 = 0;
@@ -1624,7 +1607,7 @@ void M2MStartHit(int mid, int i, int dam)
 
 		if (monster[mid]._mmode != MM_STONE) {
 			if (monster[mid].MType->mtype != MT_GOLEM) {
-				NewMonsterAnim(mid, &monster[mid].MType->Anims[MA_GOTHIT], monster[mid]._mdir);
+				NewMonsterAnim(mid, monster[mid].MType->Anims[MA_GOTHIT], monster[mid]._mdir);
 				monster[mid]._mmode = MM_GOTHIT;
 			}
 
@@ -1660,7 +1643,7 @@ void MonstStartKill(int i, int pnum, BOOL sendmsg)
 	monster[i]._mhitpoints = 0;
 	SetRndSeed(monster[i]._mRndSeed);
 	if (QuestStatus(QTYPE_GARB) && monster[i].mName == UniqMonst[UMT_GARBUD].mName) {
-		CreateTypeItem(monster[i]._mx + 1, monster[i]._my + 1, TRUE, 4, FALSE, TRUE, FALSE);
+		CreateTypeItem(monster[i]._mx + 1, monster[i]._my + 1, TRUE, 4, 0, TRUE, FALSE);
 	} else if (i > 3) {
 		SpawnItem(i, monster[i]._mx, monster[i]._my, sendmsg);
 	}
@@ -1674,7 +1657,7 @@ void MonstStartKill(int i, int pnum, BOOL sendmsg)
 	else
 		md = monster[i]._mdir;
 	monster[i]._mdir = md;
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_DEATH], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_DEATH], md);
 	monster[i]._mmode = MM_DEATH;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1731,7 +1714,7 @@ void M2MStartKill(int i, int mid)
 		md = 0;
 
 	monster[mid]._mdir = md;
-	NewMonsterAnim(mid, &monster[mid].MType->Anims[MA_DEATH], md);
+	NewMonsterAnim(mid, monster[mid].MType->Anims[MA_DEATH], md);
 	monster[mid]._mmode = MM_DEATH;
 	monster[mid]._mxoff = 0;
 	monster[mid]._myoff = 0;
@@ -1798,7 +1781,7 @@ void M_StartFadein(int i, int md, BOOL backwards)
 	if (monster[i].MType == NULL)
 		app_fatal("M_StartFadein: Monster %d \"%s\" MType NULL", i, monster[i].mName);
 
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], md);
 	monster[i]._mmode = MM_FADEIN;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1822,7 +1805,7 @@ void M_StartFadeout(int i, int md, BOOL backwards)
 	if (monster[i].MType == NULL)
 		app_fatal("M_StartFadeout: Monster %d \"%s\" MType NULL", i, monster[i].mName);
 
-	NewMonsterAnim(i, &monster[i].MType->Anims[MA_SPECIAL], md);
+	NewMonsterAnim(i, monster[i].MType->Anims[MA_SPECIAL], md);
 	monster[i]._mmode = MM_FADEOUT;
 	monster[i]._mxoff = 0;
 	monster[i]._myoff = 0;
@@ -1852,7 +1835,7 @@ void M_StartHeal(int i)
 	Monst->_mAnimFrame = Monst->MType->Anims[MA_SPECIAL].Frames;
 	Monst->_mFlags |= MFLAG_LOCK_ANIMATION;
 	Monst->_mmode = MM_HEAL;
-	Monst->_mVar1 = Monst->_mmaxhp / (16 * (random(97, 5) + 4));
+	Monst->_mVar1 = Monst->_mmaxhp / (16 * (random_(97, 5) + 4));
 }
 
 void M_ChangeLightOffset(int monst)
@@ -1880,10 +1863,11 @@ void M_ChangeLightOffset(int monst)
 		_myoff = 1;
 	}
 
-	ChangeLightOff(monster[monst].mlid, _mxoff, _myoff * (ly >> 3));
+	_myoff *= (ly >> 3);
+	ChangeLightOff(monster[monst].mlid, _mxoff, _myoff);
 }
 
-int M_DoStand(int i)
+BOOL M_DoStand(int i)
 {
 	MonsterStruct *Monst;
 
@@ -2015,11 +1999,11 @@ void M_TryM2MHit(int i, int mid, int hper, int mind, int maxd)
 	if (monster[mid].MType == NULL)
 		app_fatal("M_TryM2MHit: Monster %d \"%s\" MType NULL", mid, monster[mid].mName);
 	if (monster[mid]._mhitpoints >> 6 > 0 && (monster[mid].MType->mtype != MT_ILLWEAV || monster[mid]._mgoal != MGOAL_RETREAT)) {
-		int hit = random(4, 100);
+		int hit = random_(4, 100);
 		if (monster[mid]._mmode == MM_STONE)
 			hit = 0;
-		if (!CheckMonsterHit(mid, &ret) && hit < hper) {
-			int dam = (mind + random(5, maxd - mind + 1)) << 6;
+		if (!CheckMonsterHit(mid, ret) && hit < hper) {
+			int dam = (mind + random_(5, maxd - mind + 1)) << 6;
 			monster[mid]._mhitpoints -= dam;
 			if (monster[mid]._mhitpoints >> 6 <= 0) {
 				if (monster[mid]._mmode == MM_STONE) {
@@ -2064,7 +2048,7 @@ void M_TryH2HHit(int i, int pnum, int Hit, int MinDam, int MaxDam)
 	if (dx >= 2 || dy >= 2)
 		return;
 
-	hper = random(98, 100);
+	hper = random_(98, 100);
 #ifdef _DEBUG
 	if (debug_mode_dollar_sign || debug_mode_key_inverted_v)
 		hper = 1000;
@@ -2084,7 +2068,7 @@ void M_TryH2HHit(int i, int pnum, int Hit, int MinDam, int MaxDam)
 	if (currlevel == 16 && hit < 30)
 		hit = 30;
 	if ((plr[pnum]._pmode == PM_STAND || plr[pnum]._pmode == PM_ATTACK) && plr[pnum]._pBlockFlag) {
-		blkper = random(98, 100);
+		blkper = random_(98, 100);
 	} else {
 		blkper = 100;
 	}
@@ -2133,7 +2117,7 @@ void M_TryH2HHit(int i, int pnum, int Hit, int MinDam, int MaxDam)
 			}
 		}
 	}
-	dam = (MinDam << 6) + random(99, (MaxDam - MinDam + 1) << 6);
+	dam = (MinDam << 6) + random_(99, (MaxDam - MinDam + 1) << 6);
 	dam += (plr[pnum]._pIGetHit << 6);
 	if (dam < 64)
 		dam = 64;
@@ -2142,7 +2126,7 @@ void M_TryH2HHit(int i, int pnum, int Hit, int MinDam, int MaxDam)
 		plr[pnum]._pHPBase -= dam;
 	}
 	if (plr[pnum]._pIFlags & ISPL_THORNS) {
-		mdam = (random(99, 3) + 1) << 6;
+		mdam = (random_(99, 3) + 1) << 6;
 		monster[i]._mhitpoints -= mdam;
 		if (monster[i]._mhitpoints >> 6 <= 0)
 			M_StartKill(i, pnum);
@@ -2159,7 +2143,7 @@ void M_TryH2HHit(int i, int pnum, int Hit, int MinDam, int MaxDam)
 		SyncPlrKill(pnum, 0);
 		return;
 	}
-	StartPlrHit(pnum, dam, 0);
+	StartPlrHit(pnum, dam, FALSE);
 	if (monster[i]._mFlags & MFLAG_KNOCKBACK) {
 		if (plr[pnum]._pmode != PM_GOTHIT)
 			StartPlrHit(pnum, 0, TRUE);
@@ -2412,7 +2396,7 @@ int M_DoTalk(int i)
 	    && !(Monst->_mFlags & MFLAG_QUEST_COMPLETE)) {
 		quests[QTYPE_ZHAR]._qactive = 2;
 		quests[QTYPE_ZHAR]._qlog = TRUE;
-		CreateTypeItem(Monst->_mx + 1, Monst->_my + 1, FALSE, 0, 24, TRUE, 0);
+		CreateTypeItem(Monst->_mx + 1, Monst->_my + 1, FALSE, 0, 24, TRUE, FALSE);
 		Monst->_mFlags |= MFLAG_QUEST_COMPLETE;
 	}
 	if (Monst->mName == UniqMonst[UMT_SNOTSPIL].mName) {
@@ -2468,8 +2452,8 @@ void M_Teleport(int i)
 	if (Monst->_mmode != MM_STONE) {
 		_mx = Monst->_menemyx;
 		_my = Monst->_menemyy;
-		rx = 2 * random(100, 2) - 1;
-		ry = 2 * random(100, 2) - 1;
+		rx = 2 * random_(100, 2) - 1;
+		ry = 2 * random_(100, 2) - 1;
 
 		for (j = -1; j <= 1 && !tren; j++) {
 			for (k = -1; k < 1 && !tren; k++) {
@@ -2547,13 +2531,13 @@ void DoEnding()
 
 #ifndef SPAWN
 	if (plr[myplr]._pClass == PC_WARRIOR) {
-		play_movie("gendata\\DiabVic2.smk", 0);
+		play_movie("gendata\\DiabVic2.smk", FALSE);
 	} else if (plr[myplr]._pClass == PC_SORCERER) {
-		play_movie("gendata\\DiabVic1.smk", 0);
+		play_movie("gendata\\DiabVic1.smk", FALSE);
 	} else {
-		play_movie("gendata\\DiabVic3.smk", 0);
+		play_movie("gendata\\DiabVic3.smk", FALSE);
 	}
-	play_movie("gendata\\Diabend.smk", 0);
+	play_movie("gendata\\Diabend.smk", FALSE);
 
 	bMusicOn = gbMusicOn;
 	gbMusicOn = TRUE;
@@ -2561,9 +2545,9 @@ void DoEnding()
 	musicVolume = sound_get_or_set_music_volume(1);
 	sound_get_or_set_music_volume(0);
 
-	music_start(2);
+	music_start(TMUSIC_L2);
 	loop_movie = TRUE;
-	play_movie("gendata\\loopdend.smk", 1);
+	play_movie("gendata\\loopdend.smk", TRUE);
 	loop_movie = FALSE;
 	music_stop();
 
@@ -2636,8 +2620,8 @@ BOOL M_DoDeath(int i)
 		else
 			AddDead(monster[i]._mx, monster[i]._my, monster[i]._udeadval, (direction)monster[i]._mdir);
 
-		monster[i]._mDelFlag = TRUE;
 		dMonster[monster[i]._mx][monster[i]._my] = 0;
+		monster[i]._mDelFlag = TRUE;
 
 		M_UpdateLeader(i);
 	}
@@ -2808,11 +2792,11 @@ BOOL M_CallWalk(int i, int md)
 
 	mdtemp = md;
 	ok = DirOK(i, md);
-	if (random(101, 2))
+	if (random_(101, 2))
 		ok = ok || (md = left[mdtemp], DirOK(i, md)) || (md = right[mdtemp], DirOK(i, md));
 	else
 		ok = ok || (md = right[mdtemp], DirOK(i, md)) || (md = left[mdtemp], DirOK(i, md));
-	if (random(102, 2))
+	if (random_(102, 2))
 		ok = ok
 		    || (md = right[right[mdtemp]], DirOK(i, md))
 		    || (md = left[left[mdtemp]], DirOK(i, md));
@@ -2852,8 +2836,8 @@ BOOL M_CallWalk2(int i, int md)
 	int mdtemp;
 
 	mdtemp = md;
-	ok = DirOK(i, md);    // Can we continue in the same direction
-	if (random(101, 2)) { // Randomly go left or right
+	ok = DirOK(i, md);     // Can we continue in the same direction
+	if (random_(101, 2)) { // Randomly go left or right
 		ok = ok || (mdtemp = left[md], DirOK(i, left[md])) || (mdtemp = right[md], DirOK(i, right[md]));
 	} else {
 		ok = ok || (mdtemp = right[md], DirOK(i, right[md])) || (mdtemp = left[md], DirOK(i, left[md]));
@@ -2875,11 +2859,11 @@ BOOL M_DumbWalk(int i, int md)
 	return ok;
 }
 
-BOOL M_RoundWalk(int i, int md, int *dir)
+BOOL M_RoundWalk(int i, int md, int &dir)
 {
 	int mdtemp;
 	BOOL ok;
-	if (*dir)
+	if (dir)
 		md = left[left[md]];
 	else
 		md = right[right[md]];
@@ -2887,7 +2871,7 @@ BOOL M_RoundWalk(int i, int md, int *dir)
 	ok = DirOK(i, md);
 	mdtemp = md;
 	if (!ok) {
-		if (*dir) {
+		if (dir) {
 			md = right[mdtemp];
 			ok = DirOK(i, md) || (md = right[right[mdtemp]], DirOK(i, md));
 		} else {
@@ -2898,7 +2882,7 @@ BOOL M_RoundWalk(int i, int md, int *dir)
 	if (ok) {
 		M_WalkDir(i, md);
 	} else {
-		*dir = !*dir;
+		dir = !dir;
 		ok = M_CallWalk(i, opposite[mdtemp]);
 	}
 	return ok;
@@ -2928,12 +2912,12 @@ void MAI_Zombie(int i)
 	mx = mx - Monst->_menemyx;
 	my = my - Monst->_menemyy;
 	md = Monst->_mdir;
-	v = random(103, 100);
+	v = random_(103, 100);
 	if (abs(mx) >= 2 || abs(my) >= 2) {
 		if (v < 2 * Monst->_mint + 10) {
 			if (abs(mx) >= 2 * Monst->_mint + 4 || abs(my) >= 2 * Monst->_mint + 4) {
-				if (random(104, 100) < 2 * Monst->_mint + 20) {
-					md = random(104, 8);
+				if (random_(104, 100) < 2 * Monst->_mint + 20) {
+					md = random_(104, 8);
 				}
 				M_DumbWalk(i, md);
 			} else {
@@ -2969,16 +2953,16 @@ void MAI_SkelSd(int i)
 	md = GetDirection(mx, my, Monst->_lastx, Monst->_lasty);
 	Monst->_mdir = md;
 	if (abs(x) >= 2 || abs(y) >= 2) {
-		if (Monst->_mVar1 == MM_DELAY || (random(106, 100) >= 35 - 4 * Monst->_mint)) {
+		if (Monst->_mVar1 == MM_DELAY || (random_(106, 100) >= 35 - 4 * Monst->_mint)) {
 			M_CallWalk(i, md);
 		} else {
-			M_StartDelay(i, 15 - 2 * Monst->_mint + random(106, 10));
+			M_StartDelay(i, 15 - 2 * Monst->_mint + random_(106, 10));
 		}
 	} else {
-		if (Monst->_mVar1 == MM_DELAY || (random(105, 100) < 2 * Monst->_mint + 20)) {
+		if (Monst->_mVar1 == MM_DELAY || (random_(105, 100) < 2 * Monst->_mint + 20)) {
 			M_StartAttack(i);
 		} else {
-			M_StartDelay(i, 2 * (5 - Monst->_mint) + random(105, 10));
+			M_StartDelay(i, 2 * (5 - Monst->_mint) + random_(105, 10));
 		}
 	}
 
@@ -3036,8 +3020,9 @@ void MAI_Snake(int i)
 	int pnum;
 	int tmp;
 
-	if ((DWORD)i >= MAXMONSTERS)
+	if ((DWORD)i >= MAXMONSTERS) {
 		app_fatal("MAI_Snake: Invalid monster %d", i);
+	}
 	char pattern[6] = { 1, 1, 0, -1, -1, 0 };
 	Monst = monster + i;
 	pnum = Monst->_menemy;
@@ -3053,10 +3038,10 @@ void MAI_Snake(int i)
 		if (abs(mx) < 3 && abs(my) < 3 && LineClearF1(PosOkMonst, i, Monst->_mx, Monst->_my, fx, fy) && Monst->_mVar1 != MM_CHARGE) {
 			if (AddMissile(Monst->_mx, Monst->_my, fx, fy, md, MIS_RHINO, pnum, i, 0, 0) != -1) {
 				PlayEffect(i, 0);
+				dMonster[Monst->_mx][Monst->_my] = -(i + 1);
 				Monst->_mmode = MM_CHARGE;
-				dMonster[Monst->_mx][Monst->_my] = -1 - i;
 			}
-		} else if (Monst->_mVar1 == MM_DELAY || random(106, 100) >= 35 - 2 * Monst->_mint) {
+		} else if (Monst->_mVar1 == MM_DELAY || random_(106, 100) >= 35 - 2 * Monst->_mint) {
 			if (md + pattern[Monst->_mgoalvar1] < 0) {
 				tmp = md + pattern[Monst->_mgoalvar1] + 8;
 			} else {
@@ -3097,15 +3082,15 @@ void MAI_Snake(int i)
 			if (!M_DumbWalk(i, Monst->_mgoalvar2))
 				M_CallWalk2(i, Monst->_mdir);
 		} else {
-			M_StartDelay(i, 15 - Monst->_mint + random(106, 10));
+			M_StartDelay(i, 15 - Monst->_mint + random_(106, 10));
 		}
 	} else {
 		if (Monst->_mVar1 == MM_DELAY
 		    || Monst->_mVar1 == MM_CHARGE
-		    || (random(105, 100) < Monst->_mint + 20)) {
+		    || (random_(105, 100) < Monst->_mint + 20)) {
 			M_StartAttack(i);
 		} else
-			M_StartDelay(i, 10 - Monst->_mint + random(105, 10));
+			M_StartDelay(i, 10 - Monst->_mint + random_(105, 10));
 	}
 	if (Monst->_mmode == MM_STAND)
 		Monst->_mAnimData = Monst->MType->Anims[MA_STAND].Data[Monst->_mdir];
@@ -3130,13 +3115,13 @@ void MAI_Bat(int i)
 	yd = Monst->_my - Monst->_menemyy;
 	md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 	Monst->_mdir = md;
-	v = random(107, 100);
+	v = random_(107, 100);
 	if (Monst->_mgoal == MGOAL_RETREAT) {
 		if (!Monst->_mgoalvar1) {
 			M_CallWalk(i, opposite[md]);
 			Monst->_mgoalvar1++;
 		} else {
-			if (random(108, 2))
+			if (random_(108, 2))
 				M_CallWalk(i, left[md]);
 			else
 				M_CallWalk(i, right[md]);
@@ -3167,7 +3152,7 @@ void MAI_Bat(int i)
 		Monst->_mgoal = MGOAL_RETREAT;
 		Monst->_mgoalvar1 = 0;
 		if (Monst->MType->mtype == MT_FAMILIAR) {
-			AddMissile(Monst->_menemyx, Monst->_menemyy, Monst->_menemyx + 1, 0, -1, MIS_LIGHTNING, 1, i, random(109, 10) + 1, 0);
+			AddMissile(Monst->_menemyx, Monst->_menemyy, Monst->_menemyx + 1, 0, -1, MIS_LIGHTNING, 1, i, random_(109, 10) + 1, 0);
 		}
 	}
 
@@ -3195,7 +3180,7 @@ void MAI_SkelBow(int i)
 
 	md = M_GetDir(i);
 	Monst->_mdir = md;
-	v = random(110, 100);
+	v = random_(110, 100);
 
 	if (abs(mx) < 4 && abs(my) < 4) {
 		if (Monst->_mVar2 > 20 && v < 2 * Monst->_mint + 13
@@ -3209,7 +3194,7 @@ void MAI_SkelBow(int i)
 	mx = Monst->_menemyx;
 	my = Monst->_menemyy;
 	if (!walking) {
-		if (random(110, 100) < 2 * Monst->_mint + 3) {
+		if (random_(110, 100) < 2 * Monst->_mint + 3) {
 			if (LineClear(Monst->_mx, Monst->_my, mx, my))
 				M_StartRAttack(i, MIS_ARROW, 4);
 		}
@@ -3236,7 +3221,7 @@ void MAI_Fat(int i)
 	my = Monst->_my - Monst->_menemyy;
 	md = M_GetDir(i);
 	Monst->_mdir = md;
-	v = random(111, 100);
+	v = random_(111, 100);
 	if (abs(mx) >= 2 || abs(my) >= 2) {
 		if (Monst->_mVar2 > 20 && v < 4 * Monst->_mint + 20
 		    || (Monst->_mVar1 == MM_WALK || Monst->_mVar1 == MM_WALK2 || Monst->_mVar1 == MM_WALK3)
@@ -3288,14 +3273,14 @@ void MAI_Sneak(int i)
 					md = GetDirection(Monst->_mx, Monst->_my, plr[Monst->_menemy]._pownerx, plr[Monst->_menemy]._pownery);
 				md = opposite[md];
 				if (Monst->MType->mtype == MT_UNSEEN) {
-					if (random(112, 2))
+					if (random_(112, 2))
 						md = left[md];
 					else
 						md = right[md];
 				}
 			}
 			Monst->_mdir = md;
-			v = random(112, 100);
+			v = random_(112, 100);
 			if (abs(mx) < dist && abs(my) < dist && Monst->_mFlags & MFLAG_HIDDEN) {
 				M_StartFadein(i, md, FALSE);
 			} else {
@@ -3355,7 +3340,7 @@ void MAI_Fireman(int i)
 			M_StartRAttack(i, MIS_KRULL, 4);
 			Monst->_mgoalvar1++;
 		} else {
-			M_StartDelay(i, random(112, 10) + 5);
+			M_StartDelay(i, random_(112, 10) + 5);
 			Monst->_mgoalvar1++;
 		}
 	} else if (Monst->_mgoal == MGOAL_RETREAT) {
@@ -3363,7 +3348,7 @@ void MAI_Fireman(int i)
 		Monst->_mgoal = MGOAL_SHOOT;
 	}
 	Monst->_mdir = md;
-	random(112, 100);
+	random_(112, 100);
 	if (Monst->_mmode != MM_STAND)
 		return;
 
@@ -3409,7 +3394,7 @@ void MAI_Fallen(int i)
 	}
 
 	if (Monst->_mAnimFrame == Monst->_mAnimLen) {
-		if (random(113, 4)) {
+		if (random_(113, 4)) {
 			return;
 		}
 		if (!(Monst->_mFlags & MFLAG_NOHEAL)) {
@@ -3500,12 +3485,12 @@ void MAI_Round(int i, BOOL special)
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(114, 100);
+		v = random_(114, 100);
 		if ((abs(mx) >= 2 || abs(my) >= 2) && Monst->_msquelch == UCHAR_MAX && dTransVal[Monst->_mx][Monst->_my] == dTransVal[fx][fy]) {
-			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 4 || abs(my) >= 4) && random(115, 4) == 0) {
+			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 4 || abs(my) >= 4) && random_(115, 4) == 0) {
 				if (Monst->_mgoal != MGOAL_MOVE) {
 					Monst->_mgoalvar1 = 0;
-					Monst->_mgoalvar2 = random(116, 2);
+					Monst->_mgoalvar2 = random_(116, 2);
 				}
 				Monst->_mgoal = MGOAL_MOVE;
 				if (abs(mx) > abs(my))
@@ -3514,8 +3499,8 @@ void MAI_Round(int i, BOOL special)
 					dist = abs(my);
 				if (Monst->_mgoalvar1++ >= 2 * dist && DirOK(i, md) || dTransVal[Monst->_mx][Monst->_my] != dTransVal[fx][fy]) {
 					Monst->_mgoal = MGOAL_NORMAL;
-				} else if (!M_RoundWalk(i, md, &Monst->_mgoalvar2)) {
-					M_StartDelay(i, random(125, 10) + 10);
+				} else if (!M_RoundWalk(i, md, Monst->_mgoalvar2)) {
+					M_StartDelay(i, random_(125, 10) + 10);
 				}
 			}
 		} else
@@ -3530,7 +3515,7 @@ void MAI_Round(int i, BOOL special)
 				}
 			} else if (v < 2 * Monst->_mint + 23) {
 				Monst->_mdir = md;
-				if (special && Monst->_mhitpoints < (Monst->_mmaxhp >> 1) && random(117, 2) != 0)
+				if (special && Monst->_mhitpoints < (Monst->_mmaxhp >> 1) && random_(117, 2) != 0)
 					M_StartSpAttack(i);
 				else
 					M_StartAttack(i);
@@ -3570,9 +3555,9 @@ void MAI_Ranged(int i, int missile_type, BOOL special)
 			MonstCheckDoors(i);
 		Monst->_mdir = md;
 		if (Monst->_mVar1 == MM_RATTACK) {
-			M_StartDelay(i, random(118, 20));
+			M_StartDelay(i, random_(118, 20));
 		} else if (abs(mx) < 4 && abs(my) < 4) {
-			if (random(119, 100) < 10 * (Monst->_mint + 7))
+			if (random_(119, 100) < 10 * (Monst->_mint + 7))
 				M_CallWalk(i, opposite[md]);
 		}
 		if (Monst->_mmode == MM_STAND) {
@@ -3644,7 +3629,7 @@ void MAI_Scav(int i)
 			}
 		} else {
 			if (Monst->_mgoalvar1 == 0) {
-				if (random(120, 2) != 0) {
+				if (random_(120, 2) != 0) {
 					for (y = -4; y <= 4 && !done; y++) {
 						for (x = -4; x <= 4 && !done; x++) {
 							// BUGFIX: incorrect check of offset against limits of the dungeon
@@ -3753,12 +3738,12 @@ void MAI_RoundRanged(int i, int missile_type, BOOL checkdoors, int dam, int less
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (checkdoors && Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(121, 10000);
+		v = random_(121, 10000);
 		if ((abs(mx) >= 2 || abs(my) >= 2) && Monst->_msquelch == UCHAR_MAX && dTransVal[Monst->_mx][Monst->_my] == dTransVal[fx][fy]) {
-			if (Monst->_mgoal == MGOAL_MOVE || ((abs(mx) >= 3 || abs(my) >= 3) && random(122, 4 << lessmissiles) == 0)) {
+			if (Monst->_mgoal == MGOAL_MOVE || ((abs(mx) >= 3 || abs(my) >= 3) && random_(122, 4 << lessmissiles) == 0)) {
 				if (Monst->_mgoal != MGOAL_MOVE) {
 					Monst->_mgoalvar1 = 0;
-					Monst->_mgoalvar2 = random(123, 2);
+					Monst->_mgoalvar2 = random_(123, 2);
 				}
 				Monst->_mgoal = MGOAL_MOVE;
 				if (abs(mx) > abs(my)) {
@@ -3772,7 +3757,7 @@ void MAI_RoundRanged(int i, int missile_type, BOOL checkdoors, int dam, int less
 				    && (LineClear(Monst->_mx, Monst->_my, fx, fy))) {
 					M_StartRSpAttack(i, missile_type, dam);
 				} else {
-					M_RoundWalk(i, md, &Monst->_mgoalvar2);
+					M_RoundWalk(i, md, Monst->_mgoalvar2);
 				}
 			}
 		} else {
@@ -3784,7 +3769,7 @@ void MAI_RoundRanged(int i, int missile_type, BOOL checkdoors, int dam, int less
 			    && LineClear(Monst->_mx, Monst->_my, fx, fy)) {
 				M_StartRSpAttack(i, missile_type, dam);
 			} else if (abs(mx) >= 2 || abs(my) >= 2) {
-				v = random(124, 100);
+				v = random_(124, 100);
 				if (v < 1000 * (Monst->_mint + 5)
 				    || (Monst->_mVar1 == MM_WALK || Monst->_mVar1 == MM_WALK2 || Monst->_mVar1 == MM_WALK3) && Monst->_mVar2 == 0 && v < 1000 * (Monst->_mint + 8)) {
 					M_CallWalk(i, md);
@@ -3795,7 +3780,7 @@ void MAI_RoundRanged(int i, int missile_type, BOOL checkdoors, int dam, int less
 			}
 		}
 		if (Monst->_mmode == MM_STAND) {
-			M_StartDelay(i, random(125, 10) + 5);
+			M_StartDelay(i, random_(125, 10) + 5);
 		}
 	}
 }
@@ -3845,12 +3830,12 @@ void MAI_RR2(int i, int mistype, int dam)
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(121, 100);
+		v = random_(121, 100);
 		if ((abs(mx) >= 2 || abs(my) >= 2) && Monst->_msquelch == UCHAR_MAX && dTransVal[Monst->_mx][Monst->_my] == dTransVal[fx][fy]) {
 			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 3 || abs(my) >= 3)) {
 				if (Monst->_mgoal != MGOAL_MOVE) {
 					Monst->_mgoalvar1 = 0;
-					Monst->_mgoalvar2 = random(123, 2);
+					Monst->_mgoalvar2 = random_(123, 2);
 				}
 				Monst->_mgoal = MGOAL_MOVE;
 				Monst->_mgoalvar3 = 4;
@@ -3861,7 +3846,7 @@ void MAI_RR2(int i, int mistype, int dam)
 				}
 				if (Monst->_mgoalvar1++ < 2 * dist || !DirOK(i, md)) {
 					if (v < 5 * (Monst->_mint + 16))
-						M_RoundWalk(i, md, &Monst->_mgoalvar2);
+						M_RoundWalk(i, md, Monst->_mgoalvar2);
 				} else
 					Monst->_mgoal = MGOAL_NORMAL;
 			}
@@ -3871,7 +3856,7 @@ void MAI_RR2(int i, int mistype, int dam)
 			if (((abs(mx) >= 3 || abs(my) >= 3) && v < 5 * (Monst->_mint + 2) || v < 5 * (Monst->_mint + 1) || Monst->_mgoalvar3 == 4) && LineClear(Monst->_mx, Monst->_my, fx, fy)) {
 				M_StartRSpAttack(i, mistype, dam);
 			} else if (abs(mx) >= 2 || abs(my) >= 2) {
-				v = random(124, 100);
+				v = random_(124, 100);
 				if (v < 2 * (5 * Monst->_mint + 25)
 				    || (Monst->_mVar1 == MM_WALK || Monst->_mVar1 == MM_WALK2 || Monst->_mVar1 == MM_WALK3)
 				        && Monst->_mVar2 == 0
@@ -3879,9 +3864,9 @@ void MAI_RR2(int i, int mistype, int dam)
 					M_CallWalk(i, md);
 				}
 			} else {
-				if (random(124, 100) < 10 * (Monst->_mint + 4)) {
+				if (random_(124, 100) < 10 * (Monst->_mint + 4)) {
 					Monst->_mdir = md;
-					if (random(124, 2) != 0)
+					if (random_(124, 2) != 0)
 						M_StartAttack(i);
 					else
 						M_StartRSpAttack(i, mistype, dam);
@@ -3890,7 +3875,7 @@ void MAI_RR2(int i, int mistype, int dam)
 			Monst->_mgoalvar3 = 1;
 		}
 		if (Monst->_mmode == MM_STAND) {
-			M_StartDelay(i, random(125, 10) + 5);
+			M_StartDelay(i, random_(125, 10) + 5);
 		}
 	}
 }
@@ -3996,12 +3981,12 @@ void MAI_SkelKing(int i)
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(126, 100);
+		v = random_(126, 100);
 		if ((abs(mx) >= 2 || abs(my) >= 2) && Monst->_msquelch == UCHAR_MAX && dTransVal[Monst->_mx][Monst->_my] == dTransVal[fx][fy]) {
-			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 3 || abs(my) >= 3) && random(127, 4) == 0) {
+			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 3 || abs(my) >= 3) && random_(127, 4) == 0) {
 				if (Monst->_mgoal != MGOAL_MOVE) {
 					Monst->_mgoalvar1 = 0;
-					Monst->_mgoalvar2 = random(128, 2);
+					Monst->_mgoalvar2 = random_(128, 2);
 				}
 				Monst->_mgoal = MGOAL_MOVE;
 				if (abs(mx) > abs(my)) {
@@ -4011,8 +3996,8 @@ void MAI_SkelKing(int i)
 				}
 				if (Monst->_mgoalvar1++ >= 2 * dist && DirOK(i, md) || dTransVal[Monst->_mx][Monst->_my] != dTransVal[fx][fy]) {
 					Monst->_mgoal = MGOAL_NORMAL;
-				} else if (!M_RoundWalk(i, md, &Monst->_mgoalvar2)) {
-					M_StartDelay(i, random(125, 10) + 10);
+				} else if (!M_RoundWalk(i, md, Monst->_mgoalvar2)) {
+					M_StartDelay(i, random_(125, 10) + 10);
 				}
 			}
 		} else
@@ -4029,10 +4014,10 @@ void MAI_SkelKing(int i)
 				}
 			} else {
 				if (abs(mx) >= 2 || abs(my) >= 2) {
-					v = random(129, 100);
+					v = random_(129, 100);
 					if (v >= Monst->_mint + 25
 					    && (Monst->_mVar1 != MM_WALK && Monst->_mVar1 != MM_WALK2 && Monst->_mVar1 != MM_WALK3 || Monst->_mVar2 != 0 || (v >= Monst->_mint + 75))) {
-						M_StartDelay(i, random(130, 10) + 10);
+						M_StartDelay(i, random_(130, 10) + 10);
 					} else {
 						M_CallWalk(i, md);
 					}
@@ -4064,12 +4049,12 @@ void MAI_Rhino(int i)
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(131, 100);
+		v = random_(131, 100);
 		if (abs(mx) >= 2 || abs(my) >= 2) {
-			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 5 || abs(my) >= 5) && random(132, 4) != 0) {
+			if (Monst->_mgoal == MGOAL_MOVE || (abs(mx) >= 5 || abs(my) >= 5) && random_(132, 4) != 0) {
 				if (Monst->_mgoal != MGOAL_MOVE) {
 					Monst->_mgoalvar1 = 0;
-					Monst->_mgoalvar2 = random(133, 2);
+					Monst->_mgoalvar2 = random_(133, 2);
 				}
 				Monst->_mgoal = 4;
 				if (abs(mx) > abs(my)) {
@@ -4079,8 +4064,8 @@ void MAI_Rhino(int i)
 				}
 				if (Monst->_mgoalvar1++ >= 2 * dist || dTransVal[Monst->_mx][Monst->_my] != dTransVal[fx][fy]) {
 					Monst->_mgoal = MGOAL_NORMAL;
-				} else if (!M_RoundWalk(i, md, &Monst->_mgoalvar2)) {
-					M_StartDelay(i, random(125, 10) + 10);
+				} else if (!M_RoundWalk(i, md, Monst->_mgoalvar2)) {
+					M_StartDelay(i, random_(125, 10) + 10);
 				}
 			}
 		} else
@@ -4097,12 +4082,12 @@ void MAI_Rhino(int i)
 				}
 			} else {
 				if (abs(mx) >= 2 || abs(my) >= 2) {
-					v = random(134, 100);
+					v = random_(134, 100);
 					if (v >= 2 * Monst->_mint + 33
 					    && (Monst->_mVar1 != MM_WALK && Monst->_mVar1 != MM_WALK2 && Monst->_mVar1 != MM_WALK3
 					        || Monst->_mVar2
 					        || v >= 2 * Monst->_mint + 83)) {
-						M_StartDelay(i, random(135, 10) + 10);
+						M_StartDelay(i, random_(135, 10) + 10);
 					} else {
 						M_CallWalk(i, md);
 					}
@@ -4134,7 +4119,7 @@ void MAI_Counselor(int i)
 		md = GetDirection(Monst->_mx, Monst->_my, Monst->_lastx, Monst->_lasty);
 		if (Monst->_msquelch < UCHAR_MAX)
 			MonstCheckDoors(i);
-		v = random(121, 100);
+		v = random_(121, 100);
 		if (Monst->_mgoal == MGOAL_RETREAT) {
 			if (Monst->_mgoalvar1++ <= 3)
 				M_CallWalk(i, opposite[md]);
@@ -4149,7 +4134,7 @@ void MAI_Counselor(int i)
 				dist = abs(my);
 			if ((abs(mx) >= 2 || abs(my) >= 2) && Monst->_msquelch == UCHAR_MAX && dTransVal[Monst->_mx][Monst->_my] == dTransVal[fx][fy]) {
 				if (Monst->_mgoalvar1++ < 2 * dist || !DirOK(i, md)) {
-					M_RoundWalk(i, md, &Monst->_mgoalvar2);
+					M_RoundWalk(i, md, Monst->_mgoalvar2);
 				} else {
 					Monst->_mgoal = MGOAL_NORMAL;
 					M_StartFadein(i, md, TRUE);
@@ -4161,13 +4146,13 @@ void MAI_Counselor(int i)
 		} else if (Monst->_mgoal == MGOAL_NORMAL) {
 			if (abs(mx) >= 2 || abs(my) >= 2) {
 				if (v < 5 * (Monst->_mint + 10) && LineClear(Monst->_mx, Monst->_my, fx, fy)) {
-					M_StartRAttack(i, counsmiss[Monst->_mint], Monst->mMinDamage + random(77, Monst->mMaxDamage - Monst->mMinDamage + 1));
-				} else if (random(124, 100) < 30) {
+					M_StartRAttack(i, counsmiss[Monst->_mint], Monst->mMinDamage + random_(77, Monst->mMaxDamage - Monst->mMinDamage + 1));
+				} else if (random_(124, 100) < 30) {
 					Monst->_mgoal = MGOAL_MOVE;
 					Monst->_mgoalvar1 = 0;
 					M_StartFadeout(i, md, FALSE);
 				} else
-					M_StartDelay(i, random(105, 10) + 2 * (5 - Monst->_mint));
+					M_StartDelay(i, random_(105, 10) + 2 * (5 - Monst->_mint));
 			} else {
 				Monst->_mdir = md;
 				if (Monst->_mhitpoints < (Monst->_mmaxhp >> 1)) {
@@ -4175,16 +4160,16 @@ void MAI_Counselor(int i)
 					Monst->_mgoalvar1 = 0;
 					M_StartFadeout(i, md, FALSE);
 				} else if (Monst->_mVar1 == MM_DELAY
-				    || random(105, 100) < 2 * Monst->_mint + 20) {
+				    || random_(105, 100) < 2 * Monst->_mint + 20) {
 					M_StartRAttack(i, -1, 0);
 					AddMissile(Monst->_mx, Monst->_my, 0, 0, Monst->_mdir, MIS_FLASH, 1, i, 4, 0);
 					AddMissile(Monst->_mx, Monst->_my, 0, 0, Monst->_mdir, MIS_FLASH2, 1, i, 4, 0);
 				} else
-					M_StartDelay(i, random(105, 10) + 2 * (5 - Monst->_mint));
+					M_StartDelay(i, random_(105, 10) + 2 * (5 - Monst->_mint));
 			}
 		}
 		if (Monst->_mmode == MM_STAND) {
-			M_StartDelay(i, random(125, 10) + 5);
+			M_StartDelay(i, random_(125, 10) + 5);
 		}
 	}
 }
@@ -4248,8 +4233,8 @@ void MAI_Zhar(int i)
 		return;
 	}
 
-	my = Monst->_my;
 	mx = Monst->_mx;
+	my = Monst->_my;
 	md = M_GetDir(i);
 	if (Monst->mtalkmsg == QUEST_ZHAR1 && !(dFlags[mx][my] & BFLAG_VISIBLE) && Monst->_mgoal == MGOAL_TALKING) {
 		Monst->mtalkmsg = QUEST_ZHAR2;
@@ -4541,17 +4526,19 @@ void ProcessMonsters()
 			Monst->_mAISeed = GetRndSeed();
 		}
 		if (!(monster[mi]._mFlags & MFLAG_NOHEAL) && Monst->_mhitpoints < Monst->_mmaxhp && Monst->_mhitpoints >> 6 > 0) {
-			if (Monst->mLevel <= 1) {
-				Monst->_mhitpoints += Monst->mLevel;
-			} else {
+			if (Monst->mLevel > 1) {
 				Monst->_mhitpoints += Monst->mLevel >> 1;
+			} else {
+				Monst->_mhitpoints += Monst->mLevel;
 			}
 		}
 		mx = Monst->_mx;
 		my = Monst->_my;
 #ifndef SPAWN
-		if (dFlags[mx][my] & BFLAG_VISIBLE && Monst->_msquelch == 0 && Monst->MType->mtype == MT_CLEAVER) {
-			PlaySFX(USFX_CLEAVER);
+		if (dFlags[mx][my] & BFLAG_VISIBLE && Monst->_msquelch == 0) {
+			if (Monst->MType->mtype == MT_CLEAVER) {
+				PlaySFX(USFX_CLEAVER);
+			}
 		}
 #endif
 		if (Monst->_mFlags & MFLAG_TARGETS_MONSTER) {
@@ -4747,7 +4734,7 @@ BOOL PosOkMissile(int x, int y)
 
 BOOL CheckNoSolid(int x, int y)
 {
-	return nSolidTable[dPiece[x][y]] == 0;
+	return nSolidTable[dPiece[x][y]] == FALSE;
 }
 
 BOOL LineClearF(BOOL (*Clear)(int, int), int x1, int y1, int x2, int y2)
@@ -5088,7 +5075,7 @@ void PrintMonstHistory(int mt)
 			}
 		}
 	}
-	pinfoflag = 1;
+	pinfoflag = TRUE;
 }
 
 void PrintUniqueHistory()
@@ -5157,7 +5144,7 @@ void MissToMonst(int i, int x, int y)
 				M_TryH2HHit(m, dPlayer[oldx][oldy] - 1, 500, Monst->mMinDamage2, Monst->mMaxDamage2);
 				if (pnum == dPlayer[oldx][oldy] - 1 && (Monst->MType->mtype < MT_NSNAKE || Monst->MType->mtype > MT_GSNAKE)) {
 					if (plr[pnum]._pmode != 7 && plr[pnum]._pmode != 8)
-						StartPlrHit(pnum, 0, 1);
+						StartPlrHit(pnum, 0, TRUE);
 					newx = oldx + offset_x[Monst->_mdir];
 					newy = oldy + offset_y[Monst->_mdir];
 					if (PosOkPlayer(pnum, newx, newy)) {
@@ -5326,13 +5313,13 @@ int M_SpawnSkel(int x, int y, int dir)
 	}
 
 	if (j) {
-		skeltypes = random(136, j);
+		skeltypes = random_(136, j);
 		j = 0;
 		for (i = 0; i < nummtypes && j <= skeltypes; i++) {
 			if (IsSkel(Monsters[i].mtype))
 				j++;
 		}
-		skel = AddMonster(x, y, dir, i - 1, 1);
+		skel = AddMonster(x, y, dir, i - 1, TRUE);
 		if (skel != -1)
 			M_StartSpStand(skel, dir);
 
@@ -5384,7 +5371,7 @@ BOOL SpawnSkeleton(int ii, int x, int y)
 		return FALSE;
 	}
 
-	rs = random(137, 15) + 1;
+	rs = random_(137, 15) + 1;
 	xx = 0;
 	yy = 0;
 	while (rs > 0) {
@@ -5415,22 +5402,19 @@ int PreSpawnSkeleton()
 
 	j = 0;
 
-	if (nummtypes <= 0)
-		return -1;
-
 	for (i = 0; i < nummtypes; i++) {
 		if (IsSkel(Monsters[i].mtype))
 			j++;
 	}
 
 	if (j) {
-		skeltypes = random(136, j);
+		skeltypes = random_(136, j);
 		j = 0;
 		for (i = 0; i < nummtypes && j <= skeltypes; i++) {
 			if (IsSkel(Monsters[i].mtype))
 				j++;
 		}
-		skel = AddMonster(0, 0, 0, i - 1, 0);
+		skel = AddMonster(0, 0, 0, i - 1, FALSE);
 		if (skel != -1)
 			M_StartStand(skel, 0);
 
@@ -5452,14 +5436,14 @@ void TalktoMonster(int i)
 	pnum = Monst->_menemy;
 	Monst->_mmode = MM_TALK;
 	if (Monst->_mAi == AI_SNOTSPIL || Monst->_mAi == AI_LACHDAN) {
-		if (QuestStatus(QTYPE_BOL) && quests[QTYPE_BOL]._qvar1 == 2 && PlrHasItem(pnum, IDI_BANNER, &itm)) {
+		if (QuestStatus(QTYPE_BOL) && quests[QTYPE_BOL]._qvar1 == 2 && PlrHasItem(pnum, IDI_BANNER, itm)) {
 			RemoveInvItem(pnum, itm);
 			quests[QTYPE_BOL]._qactive = 3;
 			Monst->mtalkmsg = QUEST_BANNER12;
 			Monst->_mgoal = MGOAL_INQUIRING;
 		}
 		if (QuestStatus(QTYPE_VEIL) && Monst->mtalkmsg >= QUEST_VEIL9) {
-			if (PlrHasItem(pnum, IDI_GLDNELIX, &itm)) {
+			if (PlrHasItem(pnum, IDI_GLDNELIX, itm)) {
 				RemoveInvItem(pnum, itm);
 				Monst->mtalkmsg = QUEST_VEIL11;
 				Monst->_mgoal = MGOAL_INQUIRING;
@@ -5514,7 +5498,7 @@ BOOL CanTalkToMonst(int m)
 	return monster[m]._mgoal == MGOAL_TALKING;
 }
 
-BOOL CheckMonsterHit(int m, BOOL *ret)
+BOOL CheckMonsterHit(int m, BOOL &ret)
 {
 	if ((DWORD)m >= MAXMONSTERS) {
 		app_fatal("CheckMonsterHit: Invalid monster %d", m);
@@ -5523,14 +5507,14 @@ BOOL CheckMonsterHit(int m, BOOL *ret)
 	if (monster[m]._mAi == AI_GARG && monster[m]._mFlags & MFLAG_ALLOW_SPECIAL) {
 		monster[m]._mmode = MM_SATTACK;
 		monster[m]._mFlags &= ~MFLAG_ALLOW_SPECIAL;
-		*ret = TRUE;
+		ret = TRUE;
 		return TRUE;
 	}
 
 	if (monster[m].MType->mtype < MT_COUNSLR || monster[m].MType->mtype > MT_ADVOCATE || monster[m]._mgoal == MGOAL_NORMAL) {
 		return FALSE;
 	} else {
-		*ret = FALSE;
+		ret = FALSE;
 	}
 
 	return TRUE;
@@ -5538,13 +5522,10 @@ BOOL CheckMonsterHit(int m, BOOL *ret)
 
 int encode_enemy(int m)
 {
-	int enemy;
-
-	enemy = monster[m]._menemy;
 	if (monster[m]._mFlags & MFLAG_TARGETS_MONSTER)
-		enemy += MAX_PLRS;
-
-	return enemy;
+		return monster[m]._menemy + MAX_PLRS;
+	else
+		return monster[m]._menemy;
 }
 
 void decode_enemy(int m, int enemy)

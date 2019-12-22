@@ -102,7 +102,7 @@ typedef struct ItemStruct {
 	int _iAnimFrame;
 	int _iAnimWidth;
 	int _iAnimWidth2; // width 2?
-	int _isin;        // set when item is flagged for deletion, deprecated in 1.02
+	BOOL _iDelFlag; // set when item is flagged for deletion, deprecated in 1.02
 	char _iSelFlag;
 	BOOL _iPostDraw;
 	BOOL _iIdentified;
@@ -1066,7 +1066,7 @@ typedef struct TownerStruct {
 	int _tbtcnt;
 	int _tSelFlag;
 	int _tMsgSaid;
-	TNQ qsts[16];
+	TNQ qsts[MAXQUESTS];
 	int _tSeed;
 	int _tVar1;
 	int _tVar2;
@@ -1397,7 +1397,7 @@ typedef struct PkPlayerStruct {
 	int pMaxManaBase;
 	char pSplLvl[MAX_SPELLS];
 	unsigned __int64 pMemSpells;
-	PkItemStruct InvBody[7];
+	PkItemStruct InvBody[NUM_INVLOC];
 	PkItemStruct InvList[NUM_INV_GRID_ELEM];
 	char InvGrid[NUM_INV_GRID_ELEM];
 	BYTE _pNumInv;
