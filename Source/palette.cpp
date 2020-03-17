@@ -1,4 +1,4 @@
-#include "diablo.h"
+#include "all.h"
 #include "../3rdParty/Storm/Source/storm.h"
 
 PALETTEENTRY logical_palette[256];
@@ -284,7 +284,7 @@ void palette_update_quest_palette(int n)
 }
 #endif
 
-BOOL palette_get_colour_cycling()
+BOOL palette_get_color_cycling()
 {
 	return color_cycling_enabled;
 }

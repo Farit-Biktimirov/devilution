@@ -1,4 +1,4 @@
-#include "diablo.h"
+#include "all.h"
 
 int trapid;
 int trapdir;
@@ -52,7 +52,7 @@ char shrinemax[NUM_SHRINETYPE] = {
 	16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
 	16, 16, 16, 16, 16, 16
 };
-// 0 - sp+mp, 1 - sp only, 2 - mp only
+/** 0 - sp+mp, 1 - sp only, 2 - mp only */
 BYTE shrineavail[NUM_SHRINETYPE] = {
 	0, 0, 1, 1, 0, 0, 0, 0, 1, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
@@ -70,9 +70,9 @@ char *StoryBookName[9] = {
 	"The Black King"
 };
 int StoryText[3][3] = {
-	{ QUEST_BOOK11, QUEST_BOOK12, QUEST_BOOK13 },
-	{ QUEST_BOOK21, QUEST_BOOK22, QUEST_BOOK23 },
-	{ QUEST_BOOK31, QUEST_BOOK32, QUEST_BOOK33 }
+	{ TEXT_BOOK11, TEXT_BOOK12, TEXT_BOOK13 },
+	{ TEXT_BOOK21, TEXT_BOOK22, TEXT_BOOK23 },
+	{ TEXT_BOOK31, TEXT_BOOK32, TEXT_BOOK33 }
 };
 
 void InitObjectGFX()
@@ -276,8 +276,8 @@ void AddCandles()
 {
 	int tx, ty;
 
-	tx = quests[QTYPE_PW]._qtx;
-	ty = quests[QTYPE_PW]._qty;
+	tx = quests[Q_PWATER]._qtx;
+	ty = quests[Q_PWATER]._qty;
 	AddObject(OBJ_STORYCANDLE, tx - 2, ty + 1);
 	AddObject(OBJ_STORYCANDLE, tx + 3, ty + 1);
 	AddObject(OBJ_STORYCANDLE, tx - 1, ty + 2);
@@ -307,11 +307,11 @@ void AddBookLever(int lx1, int ly1, int lx2, int ly2, int x1, int y1, int x2, in
 			return;
 	}
 
-	if (QuestStatus(QTYPE_BLIND))
+	if (QuestStatus(Q_BLIND))
 		AddObject(OBJ_BLINDBOOK, xp, yp);
-	if (QuestStatus(QTYPE_WARLRD))
+	if (QuestStatus(Q_WARLORD))
 		AddObject(OBJ_STEELTOME, xp, yp);
-	if (QuestStatus(QTYPE_BLOOD)) {
+	if (QuestStatus(Q_BLOOD)) {
 		xp = 2 * setpc_x + 25;
 		yp = 2 * setpc_y + 40;
 		AddObject(OBJ_BLOODBOOK, xp, yp);
@@ -751,7 +751,7 @@ void InitObjects()
 		GetRndSeed();
 		if (currlevel == 9 && gbMaxPlayers == 1)
 			AddSlainHero();
-		if (currlevel == quests[QTYPE_BLKM]._qlevel && quests[QTYPE_BLKM]._qactive == 1)
+		if (currlevel == quests[Q_MUSHROOM]._qlevel && quests[Q_MUSHROOM]._qactive == QUEST_INIT)
 			AddMushPatch();
 		if (currlevel == 4)
 			AddStoryBooks();
@@ -760,46 +760,46 @@ void InitObjects()
 		if (currlevel == 12)
 			AddStoryBooks();
 		if (leveltype == DTYPE_CATHEDRAL) {
-			if (QuestStatus(QTYPE_BUTCH))
+			if (QuestStatus(Q_BUTCHER))
 				AddTortures();
-			if (QuestStatus(QTYPE_PW))
+			if (QuestStatus(Q_PWATER))
 				AddCandles();
-			if (QuestStatus(QTYPE_BOL))
+			if (QuestStatus(Q_LTBANNER))
 				AddObject(OBJ_SIGNCHEST, 2 * setpc_x + 26, 2 * setpc_y + 19);
 			InitRndLocBigObj(10, 15, OBJ_SARC);
 			AddL1Objs(0, 0, MAXDUNX, MAXDUNY);
 			InitRndBarrels();
 		}
 		if (leveltype == DTYPE_CATACOMBS) {
-			if (QuestStatus(QTYPE_INFRA))
+			if (QuestStatus(Q_ROCK))
 				InitRndLocObj5x5(1, 1, OBJ_STAND);
-			if (QuestStatus(QTYPE_BONE))
+			if (QuestStatus(Q_SCHAMB))
 				InitRndLocObj5x5(1, 1, OBJ_BOOK2R);
 			AddL2Objs(0, 0, MAXDUNX, MAXDUNY);
 			AddL2Torches();
-			if (QuestStatus(QTYPE_BLIND)) {
+			if (QuestStatus(Q_BLIND)) {
 				if (plr[myplr]._pClass == PC_WARRIOR) {
-					sp_id = QUEST_BLINDING;
+					sp_id = TEXT_BLINDING;
 				} else if (plr[myplr]._pClass == PC_ROGUE) {
-					sp_id = QUEST_RBLINDING;
+					sp_id = TEXT_RBLINDING;
 				} else if (plr[myplr]._pClass == PC_SORCERER) {
-					sp_id = QUEST_MBLINDING;
+					sp_id = TEXT_MBLINDING;
 				}
-				quests[QTYPE_BLIND]._qmsg = sp_id;
+				quests[Q_BLIND]._qmsg = sp_id;
 				AddBookLever(0, 0, MAXDUNX, MAXDUNY, setpc_x, setpc_y, setpc_w + setpc_x + 1, setpc_h + setpc_y + 1, sp_id);
 				mem = LoadFileInMem("Levels\\L2Data\\Blind2.DUN", NULL);
 				LoadMapObjs(mem, 2 * setpc_x, 2 * setpc_y);
 				mem_free_dbg(mem);
 			}
-			if (QuestStatus(QTYPE_BLOOD)) {
+			if (QuestStatus(Q_BLOOD)) {
 				if (plr[myplr]._pClass == PC_WARRIOR) {
-					sp_id = QUEST_BLOODY;
+					sp_id = TEXT_BLOODY;
 				} else if (plr[myplr]._pClass == PC_ROGUE) {
-					sp_id = QUEST_RBLOODY;
+					sp_id = TEXT_RBLOODY;
 				} else if (plr[myplr]._pClass == PC_SORCERER) {
-					sp_id = QUEST_MBLOODY;
+					sp_id = TEXT_MBLOODY;
 				}
-				quests[QTYPE_BLOOD]._qmsg = sp_id;
+				quests[Q_BLOOD]._qmsg = sp_id;
 				AddBookLever(0, 0, MAXDUNX, MAXDUNY, setpc_x, setpc_y + 3, setpc_x + 2, setpc_y + 7, sp_id);
 				AddObject(OBJ_PEDISTAL, 2 * setpc_x + 25, 2 * setpc_y + 32);
 			}
@@ -810,21 +810,21 @@ void InitObjects()
 			InitRndBarrels();
 		}
 		if (leveltype == DTYPE_HELL) {
-			if (QuestStatus(QTYPE_WARLRD)) {
+			if (QuestStatus(Q_WARLORD)) {
 				if (plr[myplr]._pClass == PC_WARRIOR) {
-					sp_id = QUEST_BLOODWAR;
+					sp_id = TEXT_BLOODWAR;
 				} else if (plr[myplr]._pClass == PC_ROGUE) {
-					sp_id = QUEST_RBLOODWAR;
+					sp_id = TEXT_RBLOODWAR;
 				} else if (plr[myplr]._pClass == PC_SORCERER) {
-					sp_id = QUEST_MBLOODWAR;
+					sp_id = TEXT_MBLOODWAR;
 				}
-				quests[QTYPE_WARLRD]._qmsg = sp_id;
+				quests[Q_WARLORD]._qmsg = sp_id;
 				AddBookLever(0, 0, MAXDUNX, MAXDUNY, setpc_x, setpc_y, setpc_x + setpc_w, setpc_y + setpc_h, sp_id);
 				mem = LoadFileInMem("Levels\\L4Data\\Warlord.DUN", NULL);
 				LoadMapObjs(mem, 2 * setpc_x, 2 * setpc_y);
 				mem_free_dbg(mem);
 			}
-			if (QuestStatus(QTYPE_VB) && gbMaxPlayers == 1)
+			if (QuestStatus(Q_BETRAYER) && gbMaxPlayers == 1)
 				AddLazStand();
 			InitRndBarrels();
 			AddL4Goodies();
@@ -937,16 +937,16 @@ void SetupObject(int i, int x, int y, int ot)
 		object[i]._oAnimFrame = random_(146, AllObjects[ot].oAnimLen - 1) + 1;
 	} else {
 		object[i]._oAnimDelay = 1000;
+		object[i]._oAnimCnt = 0;
 		object[i]._oAnimLen = AllObjects[ot].oAnimLen;
 		object[i]._oAnimFrame = AllObjects[ot].oAnimDelay;
-		object[i]._oAnimCnt = 0;
 	}
 	object[i]._oAnimWidth = AllObjects[ot].oAnimWidth;
 	object[i]._oSolidFlag = AllObjects[ot].oSolidFlag;
 	object[i]._oMissFlag = AllObjects[ot].oMissFlag;
 	object[i]._oLight = AllObjects[ot].oLightFlag;
-	object[i]._oBreak = AllObjects[ot].oBreak;
 	object[i]._oDelFlag = FALSE;
+	object[i]._oBreak = AllObjects[ot].oBreak;
 	object[i]._oSelFlag = AllObjects[ot].oSelFlag;
 	object[i]._oPreFlag = FALSE;
 	object[i]._oTrapFlag = FALSE;
@@ -1063,7 +1063,7 @@ void AddFlameTrap(int i)
 void AddFlameLvr(int i)
 {
 	object[i]._oVar1 = trapid;
-	object[i]._oVar2 = 49;
+	object[i]._oVar2 = MIS_FLAMEC;
 }
 
 void AddTrap(int i, int ot)
@@ -1073,11 +1073,11 @@ void AddTrap(int i, int ot)
 	mt = currlevel / 3 + 1;
 	mt = random_(148, mt);
 	if (mt == 0)
-		object[i]._oVar3 = 0; // arrow
+		object[i]._oVar3 = MIS_ARROW;
 	if (mt == 1)
-		object[i]._oVar3 = 1; // firebolt
+		object[i]._oVar3 = MIS_FIREBOLT;
 	if (mt == 2)
-		object[i]._oVar3 = 7; // lightning
+		object[i]._oVar3 = MIS_LIGHTCTRL;
 	object[i]._oVar4 = 0;
 }
 
@@ -1334,6 +1334,15 @@ void AddObject(int ot, int ox, int oy)
 	dObject[ox][oy] = oi + 1;
 	SetupObject(oi, ox, oy, ot);
 	switch (ot) {
+	case OBJ_L1LIGHT:
+		AddObjLight(oi, 5);
+		break;
+	case OBJ_SKFIRE:
+	case OBJ_CANDLE1:
+	case OBJ_CANDLE2:
+	case OBJ_BOOKCANDLE:
+		AddObjLight(oi, 5);
+		break;
 	case OBJ_STORYCANDLE:
 		AddObjLight(oi, 3);
 		break;
@@ -1438,13 +1447,6 @@ void AddObject(int ot, int ox, int oy)
 		AddBrnCross(oi);
 		AddObjLight(oi, 5);
 		break;
-	case OBJ_L1LIGHT:
-	case OBJ_SKFIRE:
-	case OBJ_CANDLE1:
-	case OBJ_CANDLE2:
-	case OBJ_BOOKCANDLE:
-		AddObjLight(oi, 5);
-		break;
 	case OBJ_PEDISTAL:
 		AddPedistal(oi);
 		break;
@@ -1496,38 +1498,29 @@ void Obj_Light(int i, int lr)
 
 void Obj_Circle(int i)
 {
-	int ox, oy;
+	int ox, oy, wx, wy;
 
 	ox = object[i]._ox;
 	oy = object[i]._oy;
-	if (plr[myplr].WorldX != ox || plr[myplr].WorldY != object[i]._oy) {
-		if (object[i]._otype == OBJ_MCIRCLE1)
-			object[i]._oAnimFrame = 1;
-		if (object[i]._otype == OBJ_MCIRCLE2)
-			object[i]._oAnimFrame = 3;
-		object[i]._oVar6 = 0;
-	} else {
+	wx = plr[myplr].WorldX;
+	wy = plr[myplr].WorldY;
+	if (wx == ox && wy == oy) {
 		if (object[i]._otype == OBJ_MCIRCLE1)
 			object[i]._oAnimFrame = 2;
 		if (object[i]._otype == OBJ_MCIRCLE2)
 			object[i]._oAnimFrame = 4;
-		if (ox == 45) {
-			if (oy == 47) {
-				object[i]._oVar6 = 2;
-				return;
-			}
+		if (ox == 45 && oy == 47) {
+			object[i]._oVar6 = 2;
+		} else if (ox == 26 && oy == 46) {
+			object[i]._oVar6 = 1;
 		} else {
-			if (object[i]._ox == 26 && object[i]._oy == 46) {
-				object[i]._oVar6 = 1;
-				return;
-			}
+			object[i]._oVar6 = 0;
 		}
-		object[i]._oVar6 = 0;
-		if (ox == 35 && object[i]._oy == 36 && object[i]._oVar5 == 3) {
+		if (ox == 35 && oy == 36 && object[i]._oVar5 == 3) {
 			object[i]._oVar6 = 4;
 			ObjChangeMapResync(object[i]._oVar1, object[i]._oVar2, object[i]._oVar3, object[i]._oVar4);
-			if (quests[QTYPE_VB]._qactive == 2)
-				quests[QTYPE_VB]._qvar1 = 4;
+			if (quests[Q_BETRAYER]._qactive == QUEST_ACTIVE)
+				quests[Q_BETRAYER]._qvar1 = 4;
 			AddMissile(plr[myplr].WorldX, plr[myplr].WorldY, 35, 46, plr[myplr]._pdir, MIS_RNDTELEPORT, 0, myplr, 0, 0);
 			track_repeat_walk(FALSE);
 			sgbMouseDown = 0;
@@ -1535,6 +1528,12 @@ void Obj_Circle(int i)
 			ClrPlrPath(myplr);
 			StartStand(myplr, 0);
 		}
+	} else {
+		if (object[i]._otype == OBJ_MCIRCLE1)
+			object[i]._oAnimFrame = 1;
+		if (object[i]._otype == OBJ_MCIRCLE2)
+			object[i]._oAnimFrame = 3;
+		object[i]._oVar6 = 0;
 	}
 }
 
@@ -1725,22 +1724,25 @@ void ProcessObjects()
 	for (i = 0; i < nobjects; ++i) {
 		oi = objectactive[i];
 		switch (object[oi]._otype) {
-		case OBJ_STORYCANDLE:
-			Obj_Light(oi, 3);
+		case OBJ_L1LIGHT:
+			Obj_Light(oi, 10);
 			break;
 		case OBJ_SKFIRE:
 		case OBJ_CANDLE2:
 		case OBJ_BOOKCANDLE:
 			Obj_Light(oi, 5);
 			break;
-		case OBJ_TORCHL:
-		case OBJ_TORCHR:
-		case OBJ_TORCHL2:
-		case OBJ_TORCHR2:
-			Obj_Light(oi, 8);
+		case OBJ_STORYCANDLE:
+			Obj_Light(oi, 3);
 			break;
-		case OBJ_L1LIGHT:
-			Obj_Light(oi, 10);
+		case OBJ_CRUX1:
+		case OBJ_CRUX2:
+		case OBJ_CRUX3:
+		case OBJ_BARREL:
+		case OBJ_BARRELEX:
+		case OBJ_SHRINEL:
+		case OBJ_SHRINER:
+			Obj_StopAnim(oi);
 			break;
 		case OBJ_L1LDOOR:
 		case OBJ_L1RDOOR:
@@ -1750,27 +1752,17 @@ void ProcessObjects()
 		case OBJ_L3RDOOR:
 			Obj_Door(oi);
 			break;
-		case OBJ_CRUX1:
-		case OBJ_CRUX2:
-		case OBJ_CRUX3:
-			Obj_StopAnim(oi);
-			break;
-		case OBJ_BCROSS:
-		case OBJ_TBCROSS:
-			Obj_Light(oi, 10);
-			Obj_BCrossDamage(oi);
+		case OBJ_TORCHL:
+		case OBJ_TORCHR:
+		case OBJ_TORCHL2:
+		case OBJ_TORCHR2:
+			Obj_Light(oi, 8);
 			break;
 		case OBJ_SARC:
 			Obj_Sarc(oi);
 			break;
 		case OBJ_FLAMEHOLE:
 			Obj_FlameTrap(oi);
-			break;
-		case OBJ_BARREL:
-		case OBJ_BARRELEX:
-		case OBJ_SHRINEL:
-		case OBJ_SHRINER:
-			Obj_StopAnim(oi);
 			break;
 		case OBJ_TRAPL:
 		case OBJ_TRAPR:
@@ -1779,6 +1771,11 @@ void ProcessObjects()
 		case OBJ_MCIRCLE1:
 		case OBJ_MCIRCLE2:
 			Obj_Circle(oi);
+			break;
+		case OBJ_BCROSS:
+		case OBJ_TBCROSS:
+			Obj_Light(oi, 10);
+			Obj_BCrossDamage(oi);
 			break;
 		}
 		if (object[oi]._oAnimFlag == 0)
@@ -1906,35 +1903,35 @@ void ObjL1Special(int x1, int y1, int x2, int y2)
 
 	for (i = y1; i <= y2; ++i) {
 		for (j = x1; j <= x2; ++j) {
-			dArch[j][i] = 0;
+			dSpecial[j][i] = 0;
 			if (dPiece[j][i] == 12)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 11)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 			if (dPiece[j][i] == 71)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 259)
-				dArch[j][i] = 5;
+				dSpecial[j][i] = 5;
 			if (dPiece[j][i] == 249)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 			if (dPiece[j][i] == 325)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 			if (dPiece[j][i] == 321)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 255)
-				dArch[j][i] = 4;
+				dSpecial[j][i] = 4;
 			if (dPiece[j][i] == 211)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 344)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 			if (dPiece[j][i] == 341)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 331)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 			if (dPiece[j][i] == 418)
-				dArch[j][i] = 1;
+				dSpecial[j][i] = 1;
 			if (dPiece[j][i] == 421)
-				dArch[j][i] = 2;
+				dSpecial[j][i] = 2;
 		}
 	}
 }
@@ -1945,32 +1942,32 @@ void ObjL2Special(int x1, int y1, int x2, int y2)
 
 	for (j = y1; j <= y2; j++) {
 		for (i = x1; i <= x2; i++) {
-			dArch[i][j] = 0;
+			dSpecial[i][j] = 0;
 			if (dPiece[i][j] == 541)
-				dArch[i][j] = 5;
+				dSpecial[i][j] = 5;
 			if (dPiece[i][j] == 178)
-				dArch[i][j] = 5;
+				dSpecial[i][j] = 5;
 			if (dPiece[i][j] == 551)
-				dArch[i][j] = 5;
+				dSpecial[i][j] = 5;
 			if (dPiece[i][j] == 542)
-				dArch[i][j] = 6;
+				dSpecial[i][j] = 6;
 			if (dPiece[i][j] == 553)
-				dArch[i][j] = 6;
+				dSpecial[i][j] = 6;
 			if (dPiece[i][j] == 13)
-				dArch[i][j] = 5;
+				dSpecial[i][j] = 5;
 			if (dPiece[i][j] == 17)
-				dArch[i][j] = 6;
+				dSpecial[i][j] = 6;
 		}
 	}
 	for (j = y1; j <= y2; j++) {
 		for (i = x1; i <= x2; i++) {
 			if (dPiece[i][j] == 132) {
-				dArch[i][j + 1] = 2;
-				dArch[i][j + 2] = 1;
+				dSpecial[i][j + 1] = 2;
+				dSpecial[i][j + 2] = 1;
 			}
 			if (dPiece[i][j] == 135 || dPiece[i][j] == 139) {
-				dArch[i + 1][j] = 3;
-				dArch[i + 2][j] = 4;
+				dSpecial[i + 1][j] = 3;
+				dSpecial[i + 2][j] = 4;
 			}
 		}
 	}
@@ -2046,7 +2043,7 @@ void OperateL1RDoor(int pnum, int oi, BOOL sendflag)
 		if (!deltaload)
 			PlaySfxLoc(IS_DOOROPEN, object[oi]._ox, object[oi]._oy);
 		ObjSetMicro(xp, yp, 395);
-		dArch[xp][yp] = 8;
+		dSpecial[xp][yp] = 8;
 		objects_set_door_piece(xp, yp - 1);
 		object[oi]._oAnimFrame += 2;
 		object[oi]._oPreFlag = TRUE;
@@ -2102,7 +2099,7 @@ void OperateL1LDoor(int pnum, int oi, BOOL sendflag)
 			ObjSetMicro(xp, yp, 408);
 		else
 			ObjSetMicro(xp, yp, 393);
-		dArch[xp][yp] = 7;
+		dSpecial[xp][yp] = 7;
 		objects_set_door_piece(xp - 1, yp);
 		object[oi]._oAnimFrame += 2;
 		object[oi]._oPreFlag = TRUE;
@@ -2472,7 +2469,7 @@ void OperateBook(int pnum, int i)
 		plr[myplr]._pMemSpells |= ((__int64)1 << (SPL_GUARDIAN - 1));
 		if (plr[pnum]._pSplLvl[SPL_GUARDIAN] < 15)
 			plr[myplr]._pSplLvl[SPL_GUARDIAN]++;
-		quests[QTYPE_BONE]._qactive = 3;
+		quests[Q_SCHAMB]._qactive = QUEST_DONE;
 		if (!deltaload)
 			PlaySfxLoc(IS_QUESTDN, object[i]._ox, object[i]._oy);
 		InitDiabloMsg(EMSG_BONECHAMB);
@@ -2506,24 +2503,24 @@ void OperateBookLever(int pnum, int i)
 	x = 2 * setpc_x + 16;
 	y = 2 * setpc_y + 16;
 	if (object[i]._oSelFlag != 0 && !qtextflag) {
-		if (object[i]._otype == OBJ_BLINDBOOK && !quests[QTYPE_BLIND]._qvar1) {
-			quests[QTYPE_BLIND]._qactive = 2;
-			quests[QTYPE_BLIND]._qlog = 1;
-			quests[QTYPE_BLIND]._qvar1 = 1;
+		if (object[i]._otype == OBJ_BLINDBOOK && !quests[Q_BLIND]._qvar1) {
+			quests[Q_BLIND]._qactive = QUEST_ACTIVE;
+			quests[Q_BLIND]._qlog = 1;
+			quests[Q_BLIND]._qvar1 = 1;
 		}
-		if (object[i]._otype == OBJ_BLOODBOOK && !quests[QTYPE_BLOOD]._qvar1) {
-			quests[QTYPE_BLOOD]._qactive = 2;
-			quests[QTYPE_BLOOD]._qlog = 1;
-			quests[QTYPE_BLOOD]._qvar1 = 1;
+		if (object[i]._otype == OBJ_BLOODBOOK && !quests[Q_BLOOD]._qvar1) {
+			quests[Q_BLOOD]._qactive = QUEST_ACTIVE;
+			quests[Q_BLOOD]._qlog = 1;
+			quests[Q_BLOOD]._qvar1 = 1;
 			SpawnQuestItem(IDI_BLDSTONE, 2 * setpc_x + 19, 2 * setpc_y + 26, 0, 1);
 			SpawnQuestItem(IDI_BLDSTONE, 2 * setpc_x + 31, 2 * setpc_y + 26, 0, 1);
 			SpawnQuestItem(IDI_BLDSTONE, 2 * setpc_x + 25, 2 * setpc_y + 33, 0, 1);
 		}
 		object[i]._otype = object[i]._otype;
-		if (object[i]._otype == OBJ_STEELTOME && !quests[QTYPE_WARLRD]._qvar1) {
-			quests[QTYPE_WARLRD]._qactive = 2;
-			quests[QTYPE_WARLRD]._qlog = 1;
-			quests[QTYPE_WARLRD]._qvar1 = 1;
+		if (object[i]._otype == OBJ_STEELTOME && !quests[Q_WARLORD]._qvar1) {
+			quests[Q_WARLORD]._qactive = QUEST_ACTIVE;
+			quests[Q_WARLORD]._qlog = 1;
+			quests[Q_WARLORD]._qvar1 = 1;
 		}
 		if (object[i]._oAnimFrame != object[i]._oVar6) {
 			if (object[i]._otype != OBJ_BLOODBOOK)
@@ -2554,18 +2551,18 @@ void OperateSChambBk(int pnum, int i)
 				SyncObjectAnim(objectactive[j]);
 		}
 		object[i]._oAnimFrame = object[i]._oVar6;
-		if (quests[QTYPE_BONE]._qactive == 1) {
-			quests[QTYPE_BONE]._qactive = 2;
-			quests[QTYPE_BONE]._qlog = 1;
+		if (quests[Q_SCHAMB]._qactive == QUEST_INIT) {
+			quests[Q_SCHAMB]._qactive = QUEST_ACTIVE;
+			quests[Q_SCHAMB]._qlog = 1;
 		}
 		if (plr[myplr]._pClass == PC_WARRIOR) {
-			textdef = QUEST_BONER;
+			textdef = TEXT_BONER;
 		} else if (plr[myplr]._pClass == PC_ROGUE) {
-			textdef = QUEST_RBONER;
+			textdef = TEXT_RBONER;
 		} else if (plr[myplr]._pClass == PC_SORCERER) {
-			textdef = QUEST_MBONER;
+			textdef = TEXT_MBONER;
 		}
-		quests[QTYPE_BONE]._qmsg = textdef;
+		quests[Q_SCHAMB]._qmsg = textdef;
 		InitQTextMsg(textdef);
 	}
 }
@@ -2620,7 +2617,7 @@ void OperateMushPatch(int pnum, int i)
 {
 	int x, y;
 
-	if (quests[QTYPE_BLKM]._qactive != 2 || quests[QTYPE_BLKM]._qvar1 < QS_TOMEGIVEN) {
+	if (quests[Q_MUSHROOM]._qactive != QUEST_ACTIVE || quests[Q_MUSHROOM]._qvar1 < QS_TOMEGIVEN) {
 		if (!deltaload && pnum == myplr) {
 			if (plr[myplr]._pClass == PC_WARRIOR) {
 				PlaySFX(PS_WARR13);
@@ -2641,7 +2638,7 @@ void OperateMushPatch(int pnum, int i)
 			if (!deltaload) {
 				GetSuperItemLoc(object[i]._ox, object[i]._oy, x, y);
 				SpawnQuestItem(IDI_MUSHROOM, x, y, 0, 0);
-				quests[QTYPE_BLKM]._qvar1 = QS_MUSHSPAWNED;
+				quests[Q_MUSHROOM]._qvar1 = QS_MUSHSPAWNED;
 			}
 		}
 	}
@@ -2651,7 +2648,7 @@ void OperateInnSignChest(int pnum, int i)
 {
 	int x, y;
 
-	if (quests[QTYPE_BOL]._qvar1 != 2) {
+	if (quests[Q_LTBANNER]._qvar1 != 2) {
 		if (!deltaload && pnum == myplr) {
 			if (plr[myplr]._pClass == PC_WARRIOR) {
 				PlaySFX(PS_WARR24);
@@ -2716,8 +2713,8 @@ void OperateTrapLvr(int i)
 		for (; j < nobjects; j++) {
 			oi = objectactive[j];
 			if (object[oi]._otype == object[i]._oVar2 && object[oi]._oVar1 == object[i]._oVar1) {
-				object[oi]._oAnimFlag = 0;
 				object[oi]._oVar2 = 1;
+				object[oi]._oAnimFlag = 0;
 			}
 		}
 		return;
@@ -2944,8 +2941,8 @@ void OperateShrine(int pnum, int i, int sType)
 				}
 				if (cnt == 0)
 					break;
-				r = random_(0, 7);
-				if (plr[pnum].InvBody[r]._itype == -1 || plr[pnum].InvBody[r]._iMaxDur == DUR_INDESTRUCTIBLE || plr[pnum].InvBody[r]._iMaxDur == 0)
+				r = random_(0, NUM_INVLOC);
+				if (plr[pnum].InvBody[r]._itype == ITYPE_NONE || plr[pnum].InvBody[r]._iMaxDur == DUR_INDESTRUCTIBLE || plr[pnum].InvBody[r]._iMaxDur == 0)
 					continue;
 
 				plr[pnum].InvBody[r]._iDurability -= 20;
@@ -3194,14 +3191,14 @@ void OperateShrine(int pnum, int i, int sType)
 				    || plr[pnum].InvList[j]._iMiscId == IMISC_MANA) {
 					SetPlrHandItem(&plr[pnum].HoldItem, ItemMiscIdIdx(IMISC_REJUV));
 					GetPlrHandSeed(&plr[pnum].HoldItem);
-					plr[pnum].HoldItem._iStatFlag = 1;
+					plr[pnum].HoldItem._iStatFlag = TRUE;
 					plr[pnum].InvList[j] = plr[pnum].HoldItem;
 				}
 				if (plr[pnum].InvList[j]._iMiscId == IMISC_FULLHEAL
 				    || plr[pnum].InvList[j]._iMiscId == IMISC_FULLMANA) {
 					SetPlrHandItem(&plr[pnum].HoldItem, ItemMiscIdIdx(IMISC_FULLREJUV));
 					GetPlrHandSeed(&plr[pnum].HoldItem);
-					plr[pnum].HoldItem._iStatFlag = 1;
+					plr[pnum].HoldItem._iStatFlag = TRUE;
 					plr[pnum].InvList[j] = plr[pnum].HoldItem;
 				}
 			}
@@ -3212,14 +3209,14 @@ void OperateShrine(int pnum, int i, int sType)
 				    || plr[pnum].SpdList[j]._iMiscId == IMISC_MANA) {
 					SetPlrHandItem(&plr[pnum].HoldItem, ItemMiscIdIdx(IMISC_REJUV));
 					GetPlrHandSeed(&plr[pnum].HoldItem);
-					plr[pnum].HoldItem._iStatFlag = 1;
+					plr[pnum].HoldItem._iStatFlag = TRUE;
 					plr[pnum].SpdList[j] = plr[pnum].HoldItem;
 				}
 				if (plr[pnum].SpdList[j]._iMiscId == IMISC_FULLHEAL
 				    || plr[pnum].SpdList[j]._iMiscId == IMISC_FULLMANA) {
 					SetPlrHandItem(&plr[pnum].HoldItem, ItemMiscIdIdx(IMISC_FULLREJUV));
 					GetPlrHandSeed(&plr[pnum].HoldItem);
-					plr[pnum].HoldItem._iStatFlag = 1;
+					plr[pnum].HoldItem._iStatFlag = TRUE;
 					plr[pnum].SpdList[j] = plr[pnum].HoldItem;
 				}
 			}
@@ -3470,9 +3467,9 @@ void OperateSkelBook(int pnum, int i, BOOL sendmsg)
 		if (!deltaload) {
 			SetRndSeed(object[i]._oRndSeed);
 			if (random_(161, 5))
-				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_MISC, 21, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_MISC, IMISC_SCROLL, sendmsg, FALSE);
 			else
-				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_MISC, 24, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_MISC, IMISC_BOOK, sendmsg, FALSE);
 			if (pnum == myplr)
 				NetSendCmdParam1(FALSE, CMD_OPERATEOBJ, i);
 		}
@@ -3489,11 +3486,11 @@ void OperateBookCase(int pnum, int i, BOOL sendmsg)
 		if (!deltaload) {
 			SetRndSeed(object[i]._oRndSeed);
 			CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_MISC, IMISC_BOOK, sendmsg, FALSE);
-			if (QuestStatus(QTYPE_ZHAR)
+			if (QuestStatus(Q_ZHAR)
 			    && monster[MAX_PLRS].mName == UniqMonst[UMT_ZHAR].mName
 			    && monster[MAX_PLRS]._msquelch == UCHAR_MAX
 			    && monster[MAX_PLRS]._mhitpoints) {
-				monster[MAX_PLRS].mtalkmsg = QUEST_ZHAR2;
+				monster[MAX_PLRS].mtalkmsg = TEXT_ZHAR2;
 				M_StartStand(0, monster[MAX_PLRS]._mdir);
 				monster[MAX_PLRS]._mgoal = MGOAL_SHOOT;
 				monster[MAX_PLRS]._mmode = MM_TALK;
@@ -3528,13 +3525,13 @@ void OperateArmorStand(int pnum, int i, BOOL sendmsg)
 			SetRndSeed(object[i]._oRndSeed);
 			uniqueRnd = random_(0, 2);
 			if (currlevel <= 5) {
-				CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, ITYPE_LARMOR, 0, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, ITYPE_LARMOR, IMISC_NONE, sendmsg, FALSE);
 			} else if (currlevel >= 6 && currlevel <= 9) {
-				CreateTypeItem(object[i]._ox, object[i]._oy, uniqueRnd, ITYPE_MARMOR, 0, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, uniqueRnd, ITYPE_MARMOR, IMISC_NONE, sendmsg, FALSE);
 			} else if (currlevel >= 10 && currlevel <= 12) {
-				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_HARMOR, 0, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, ITYPE_HARMOR, IMISC_NONE, sendmsg, FALSE);
 			} else if (currlevel >= 13 && currlevel <= 16) {
-				CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, ITYPE_HARMOR, 0, sendmsg, FALSE);
+				CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, ITYPE_HARMOR, IMISC_NONE, sendmsg, FALSE);
 			}
 			if (pnum == myplr)
 				NetSendCmdParam1(FALSE, CMD_OPERATEOBJ, i);
@@ -3584,8 +3581,8 @@ void OperateCauldron(int pnum, int i, int sType)
 	SetRndSeed(object[i]._oRndSeed);
 	object[i]._oVar1 = FindValidShrine(i);
 	OperateShrine(pnum, i, sType);
-	object[i]._oAnimFlag = 0;
 	object[i]._oAnimFrame = 3;
+	object[i]._oAnimFlag = 0;
 	force_redraw = 255;
 }
 
@@ -3737,9 +3734,9 @@ void OperateWeaponRack(int pnum, int i, BOOL sendmsg)
 		return;
 
 	if (leveltype > 1)
-		CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, weaponType, 0, sendmsg, FALSE);
+		CreateTypeItem(object[i]._ox, object[i]._oy, TRUE, weaponType, IMISC_NONE, sendmsg, FALSE);
 	else
-		CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, weaponType, 0, sendmsg, FALSE);
+		CreateTypeItem(object[i]._ox, object[i]._oy, FALSE, weaponType, IMISC_NONE, sendmsg, FALSE);
 	if (pnum == myplr)
 		NetSendCmdParam1(FALSE, CMD_OPERATEOBJ, i);
 }
@@ -4194,12 +4191,12 @@ void SyncL1Doors(int i)
 			ObjSetMicro(x, y, 408);
 		else
 			ObjSetMicro(x, y, 393);
-		dArch[x][y] = 7;
+		dSpecial[x][y] = 7;
 		objects_set_door_piece(x - 1, y);
 		y--;
 	} else {
 		ObjSetMicro(x, y, 395);
-		dArch[x][y] = 8;
+		dSpecial[x][y] = 8;
 		objects_set_door_piece(x, y - 1);
 		x--;
 	}
@@ -4266,30 +4263,22 @@ void SyncPedistal(int i)
 
 void SyncL2Doors(int i)
 {
-	int val;
 	int x, y;
 
-	val = object[i]._oVar4;
-	if (!val)
+	if (object[i]._oVar4 == 0)
 		object[i]._oMissFlag = FALSE;
 	else
 		object[i]._oMissFlag = TRUE;
 	x = object[i]._ox;
 	y = object[i]._oy;
 	object[i]._oSelFlag = 2;
-	if (object[i]._otype == OBJ_L2LDOOR && val == 0) {
+	if (object[i]._otype == OBJ_L2LDOOR && object[i]._oVar4 == 0) {
 		ObjSetMicro(x, y, 538);
-		return;
-	}
-	if (object[i]._otype == OBJ_L2LDOOR && (val == 1 || val == 2)) {
+	} else if (object[i]._otype == OBJ_L2LDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
 		ObjSetMicro(x, y, 13);
-		return;
-	}
-	if (object[i]._otype == OBJ_L2RDOOR && val == 0) {
+	} else if (object[i]._otype == OBJ_L2RDOOR && object[i]._oVar4 == 0) {
 		ObjSetMicro(x, y, 540);
-		return;
-	}
-	if (object[i]._otype == OBJ_L2RDOOR && (val == 1 || val == 2)) {
+	} else if (object[i]._otype == OBJ_L2RDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
 		ObjSetMicro(x, y, 17);
 	}
 }
@@ -4304,17 +4293,11 @@ void SyncL3Doors(int i)
 	object[i]._oSelFlag = 2;
 	if (object[i]._otype == OBJ_L3LDOOR && object[i]._oVar4 == 0) {
 		ObjSetMicro(x, y, 531);
-		return;
-	}
-	if (object[i]._otype == OBJ_L3LDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
+	} else if (object[i]._otype == OBJ_L3LDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
 		ObjSetMicro(x, y, 538);
-		return;
-	}
-	if (object[i]._otype == OBJ_L3RDOOR && object[i]._oVar4 == 0) {
+	} else if (object[i]._otype == OBJ_L3RDOOR && object[i]._oVar4 == 0) {
 		ObjSetMicro(x, y, 534);
-		return;
-	}
-	if (object[i]._otype == OBJ_L3RDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
+	} else if (object[i]._otype == OBJ_L3RDOOR && (object[i]._oVar4 == 1 || object[i]._oVar4 == 2)) {
 		ObjSetMicro(x, y, 541);
 	}
 }

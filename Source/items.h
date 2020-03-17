@@ -1,4 +1,8 @@
-//HEADER_GOES_HERE
+/**
+ * @file items.h
+ *
+ * Interface of item functionality.
+ */
 #ifndef __ITEMS_H__
 #define __ITEMS_H__
 
@@ -9,7 +13,7 @@ extern ItemStruct curruitem;
 extern ItemGetRecordStruct itemrecord[MAXITEMS];
 extern ItemStruct item[MAXITEMS + 1];
 extern BOOL itemhold[3][3];
-extern BYTE *itemanims[35];
+extern BYTE *itemanims[ITEMTYPES];
 extern BOOL UniqueItemFlag[128];
 extern int numitems;
 extern int gnNumGetRecords;
@@ -129,10 +133,10 @@ void PutItemRecord(int nSeed, WORD wCI, int nIndex);
 /* data */
 
 extern BYTE ItemCAnimTbl[169];
-extern char *ItemDropNames[35];
-extern BYTE ItemAnimLs[35];
-extern int ItemDropSnds[35];
-extern int ItemInvSnds[35];
+extern char *ItemDropNames[ITEMTYPES];
+extern BYTE ItemAnimLs[ITEMTYPES];
+extern int ItemDropSnds[ITEMTYPES];
+extern int ItemInvSnds[ITEMTYPES];
 extern int idoppely;
 extern int premiumlvladd[6];
 

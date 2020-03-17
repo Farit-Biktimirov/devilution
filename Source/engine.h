@@ -1,15 +1,31 @@
-//HEADER_GOES_HERE
+/**
+ * @file engine.h
+ *
+ *  of basic engine helper functions:
+ * - Sprite blitting
+ * - Drawing
+ * - Angle calculation
+ * - RNG
+ * - Memory allocation
+ * - File loading
+ * - Video playback
+ */
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
 //offset 0
 //pCelBuff->pFrameTable[0]
 
-extern char gbPixelCol;  // automap pixel color 8-bit (palette entry)
-extern BOOL gbRotateMap; // flip - if y < x
+/** automap pixel color 8-bit (palette entry) */
+extern char gbPixelCol;
+/** flip - if y < x */
+extern BOOL gbRotateMap;
+/** Seed value before the most recent call to SetRndSeed() */
 extern int orgseed;
+/** Track number of calls to GetRndSeed() since last call to SetRndSeed() */
 extern int SeedCount;
-extern BOOL gbNotInView; // valid - if x/y are in bounds
+/** valid - if x/y are in bounds */
+extern BOOL gbNotInView;
 
 __FINLINE BYTE *CelGetFrame(BYTE *pCelBuff, int nCel, int *nDataSize);
 
@@ -32,7 +48,7 @@ void CelBlitLightTransSafe(BYTE *pDecodeTo, BYTE *pRLEBytes, int nDataSize, int 
 void CelDrawLightSafe(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap);
 void CelClippedBlitLightTransSafe(BYTE *pBuff, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap);
 void CelDrawLightRedSafe(int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap, char light);
-void CelBlitWidth(BYTE *pBuff, int always_0, int hgt, int wdt, BYTE *pCelBuff, int nCel, int nWidth);
+void CelBlitWidth(BYTE *pBuff, int x, int y, int wdt, BYTE *pCelBuff, int nCel, int nWidth);
 void CelBlitOutline(char col, int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap);
 void CelBlitOutlineSafe(char col, int sx, int sy, BYTE *pCelBuff, int nCel, int nWidth, int CelSkip, int CelCap);
 void ENG_set_pixel(int sx, int sy, BYTE col);

@@ -1,7 +1,15 @@
-#include "diablo.h"
+/**
+ * @file gendung.cpp
+ *
+ * Implementation of general dungeon generation code.
+ */
+#include "all.h"
 
 WORD level_frame_types[MAXTILES];
 int themeCount;
+/**
+ * List of transparent dPieces
+ */
 BOOLEAN nTransTable[2049];
 //int dword_52D204;
 int dMonster[MAXDUNX][MAXDUNY];
@@ -23,6 +31,9 @@ int tile_defs[MAXTILES];
 BYTE *pMegaTiles;
 BYTE *pLevelPieces;
 int gnDifficulty;
+/**
+ * List of transparancy masks to use for dPieces
+ */
 char block_lvid[2049];
 //char byte_5B78EB;
 char dTransVal[MAXDUNX][MAXDUNY];
@@ -30,6 +41,9 @@ BOOLEAN nTrapTable[2049];
 BYTE leveltype;
 BYTE currlevel;
 BOOLEAN TransList[256];
+/**
+ * List of path blocking dPieces
+ */
 BOOLEAN nSolidTable[2049];
 int level_frame_count[MAXTILES];
 ScrollStruct ScrollInfo;
@@ -37,17 +51,23 @@ BYTE *pDungeonCels;
 int SpeedFrameTbl[128][16];
 THEME_LOC themeLoc[MAXTHEMES];
 char dPlayer[MAXDUNX][MAXDUNY];
-int dword_5C2FF8;
-int dword_5C2FFC;
-int scr_pix_width;
-int scr_pix_height;
-char dArch[MAXDUNX][MAXDUNY];
+int ViewBX;
+int ViewBY;
+int ViewDX;
+int ViewDY;
+char dSpecial[MAXDUNX][MAXDUNY];
+/**
+ * List of light blocking dPieces
+ */
 BOOLEAN nBlockTable[2049];
 BYTE *pSpecialCels;
 char dFlags[MAXDUNX][MAXDUNY];
 char dItem[MAXDUNX][MAXDUNY];
 BYTE setlvlnum;
 int level_frame_sizes[MAXTILES];
+/**
+ * List of missile blocking dPieces
+ */
 BOOLEAN nMissileTable[2049];
 BYTE *pSetPiece;
 char setlvltype;
@@ -540,15 +560,15 @@ void SetDungeonMicros()
 	SetSpeedCels();
 
 	if (zoomflag) {
-		scr_pix_width = SCREEN_WIDTH;
-		scr_pix_height = VIEWPORT_HEIGHT;
-		dword_5C2FF8 = SCREEN_WIDTH / 64;
-		dword_5C2FFC = VIEWPORT_HEIGHT / 32;
+		ViewDX = SCREEN_WIDTH;
+		ViewDY = VIEWPORT_HEIGHT;
+		ViewBX = SCREEN_WIDTH / 64;
+		ViewBY = VIEWPORT_HEIGHT / 32;
 	} else {
-		scr_pix_width = ZOOM_WIDTH;
-		scr_pix_height = ZOOM_HEIGHT;
-		dword_5C2FF8 = ZOOM_WIDTH / 64;
-		dword_5C2FFC = ZOOM_HEIGHT / 32;
+		ViewDX = ZOOM_WIDTH;
+		ViewDY = ZOOM_HEIGHT;
+		ViewBX = ZOOM_WIDTH / 64;
+		ViewBY = ZOOM_HEIGHT / 32;
 	}
 }
 
@@ -943,10 +963,10 @@ BOOL SkipThemeRoom(int x, int y)
 	for (i = 0; i < themeCount; i++) {
 		if (x >= themeLoc[i].x - 2 && x <= themeLoc[i].x + themeLoc[i].width + 2
 		    && y >= themeLoc[i].y - 2 && y <= themeLoc[i].y + themeLoc[i].height + 2)
-			return 0;
+			return FALSE;
 	}
 
-	return 1;
+	return TRUE;
 }
 
 void InitLevels()

@@ -1,4 +1,9 @@
-#include "diablo.h"
+/**
+ * @file multi.cpp
+ *
+ * Implementation of functions for keeping multiplaye games in sync.
+ */
+#include "all.h"
 #include "../3rdParty/Storm/Source/storm.h"
 #include "../DiabloUI/diabloui.h"
 
@@ -18,7 +23,7 @@ BYTE gbActivePlayers;
 BOOLEAN gbGameDestroyed;
 BOOLEAN sgbSendDeltaTbl[MAX_PLRS];
 _gamedata sgGameInitInfo;
-BOOLEAN gbGameUninitialized;
+BOOLEAN gbSelectProvider;
 int sglTimeoutStart;
 int sgdwPlayerLeftReasonTbl[MAX_PLRS];
 TBuffer sgLoPriBuf;
@@ -272,7 +277,7 @@ void multi_player_left_msg(int pnum, int left)
 		RemovePlrFromMap(pnum);
 		RemovePortalMissile(pnum);
 		DeactivatePortal(pnum);
-		RemovePlrPortal(pnum);
+		delta_close_portal(pnum);
 		RemovePlrMissiles(pnum);
 		if (left) {
 			pszFmt = "Player '%s' just left the game";
@@ -449,7 +454,7 @@ void multi_process_network_packets()
 	multi_clear_left_tbl();
 	multi_process_tmsgs();
 	while (SNetReceiveMessage((int *)&dwID, &data, (int *)&dwMsgSize)) {
-		pkt_counter++;
+		dwRecCount++;
 		multi_clear_left_tbl();
 		pkt = (TPktHdr *)data;
 		if (dwMsgSize < sizeof(TPktHdr))
@@ -754,7 +759,7 @@ BOOL NetInit(BOOL bSinglePlayer, BOOL *pfExitProgram)
 		if (sgbPlayerTurnBitTbl[myplr] == 0 || msg_wait_resync())
 			break;
 		NetClose();
-		gbGameUninitialized = FALSE;
+		gbSelectProvider = FALSE;
 	}
 	gnDifficulty = sgGameInitInfo.bDiff;
 	SetRndSeed(sgGameInitInfo.dwSeed);
@@ -859,7 +864,7 @@ BOOL multi_init_multi(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info,
 
 	for (first = TRUE;; first = FALSE) {
 		type = 0x00;
-		if (gbGameUninitialized) {
+		if (gbSelectProvider) {
 			if (!UiSelectProvider(0, client_info, user_info, ui_info, &fileinfo, &type)
 			    && (!first || SErrGetLastError() != STORM_ERROR_REQUIRES_UPGRADE || !multi_upgrade(pfExitProgram))) {
 				return FALSE;
@@ -872,7 +877,7 @@ BOOL multi_init_multi(_SNETPROGRAMDATA *client_info, _SNETPLAYERDATA *user_info,
 		if (UiSelectGame(1, client_info, user_info, ui_info, &fileinfo, &playerId))
 			break;
 
-		gbGameUninitialized = TRUE;
+		gbSelectProvider = TRUE;
 	}
 
 	if ((DWORD)playerId >= MAX_PLRS) {
