@@ -4,7 +4,9 @@
  * Global definitions and Macros.
  */
 
+#define DIABOOL					BOOL
 #define GAME_NAME				"DIABLO"
+#define APP_NAME				"Diablo"
 
 #define DMAXX					40
 #define DMAXY					40
@@ -54,6 +56,8 @@
 #define VOLUME_MIN				-1600
 #define VOLUME_MAX				0
 
+#define NUM_TOWNERS				16
+
 // todo: enums
 #define NUMLEVELS				17
 #define SMITH_ITEMS				20
@@ -63,6 +67,7 @@
 
 // from diablo 2 beta
 #define MAXEXP					2000000000
+#define MAXRESIST				75
 
 #define GOLD_SMALL_LIMIT		1000
 #define GOLD_MEDIUM_LIMIT		2500
@@ -106,8 +111,8 @@
 #define SCREEN_WIDTH	640
 #define SCREEN_HEIGHT	480
 
-#define ZOOM_WIDTH		384
-#define ZOOM_HEIGHT		224
+#define ZOOM_WIDTH		(SCREEN_WIDTH / 2 + TILE_WIDTH)
+#define ZOOM_HEIGHT		(VIEWPORT_HEIGHT / 2 + TILE_HEIGHT + TILE_HEIGHT / 2)
 
 // If defined, use 32-bit colors instead of 8-bit [Default -> Undefined]
 //#define RGBMODE
@@ -128,7 +133,9 @@
 
 #define BUFFER_WIDTH	(BORDER_LEFT + SCREEN_WIDTH + BORDER_RIGHT)
 #define BUFFER_HEIGHT	(BORDER_TOP + SCREEN_HEIGHT + BORDER_BOTTOM)
-#define TILE_SIZE		32
+
+#define TILE_WIDTH		64
+#define TILE_HEIGHT		32
 
 #define PANEL_WIDTH     640
 #define PANEL_HEIGHT    128
@@ -137,9 +144,10 @@
 #define PANEL_X			(SCREEN_X + PANEL_LEFT)
 #define PANEL_Y			(SCREEN_Y + PANEL_TOP)
 
+#define SPANEL_WIDTH	 320
 #define SPANEL_HEIGHT	 352
 
-#define RIGHT_PANEL		(SCREEN_WIDTH - 320)
+#define RIGHT_PANEL		(SCREEN_WIDTH - SPANEL_WIDTH)
 #define RIGHT_PANEL_X	(SCREEN_X + RIGHT_PANEL)
 
 #if SCREEN_WIDTH <= PANEL_WIDTH

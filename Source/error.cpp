@@ -11,7 +11,7 @@ char msgflag;
 char msgcnt;
 
 /** Maps from error_id to error message. */
-char *MsgStrings[44] = {
+char *MsgStrings[] = {
 	"",
 	"No automap available in town",
 	"No multiplayer functions in demo",
@@ -55,7 +55,7 @@ char *MsgStrings[44] = {
 	"You must be at least level 8 to use this.",
 	"You must be at least level 13 to use this.",
 	"You must be at least level 17 to use this.",
-	"Arcane knowledge gained!"
+	"Arcane knowledge gained!",
 };
 
 void InitDiabloMsg(char e)
@@ -109,7 +109,7 @@ void DrawDiabloMsg()
 		sy += 12;
 	}
 
-	/// ASSERT: assert(gpBuffer);
+	assert(gpBuffer);
 
 #define TRANS_RECT_X (PANEL_LEFT + 104)
 #define TRANS_RECT_Y (DIALOG_TOP - 8)

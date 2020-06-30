@@ -2,7 +2,7 @@
 #ifndef __TOWNERS_H__
 #define __TOWNERS_H__
 
-extern TownerStruct towner[16];
+extern TownerStruct towner[NUM_TOWNERS];
 
 int GetActiveTowner(int t);
 void SetTownerGPtrs(BYTE *pData, BYTE **pAnim);
@@ -40,6 +40,6 @@ void CowSFX(int pnum);
 
 /* data */
 
-extern QuestTalkData Qtalklist[11];
+extern QuestTalkData Qtalklist[];
 
 #endif /* __TOWNERS_H__ */

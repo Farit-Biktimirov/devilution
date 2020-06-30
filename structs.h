@@ -185,10 +185,10 @@ typedef struct PlayerStruct {
 	int destParam3;
 	int destParam4;
 	int plrlevel;
-	int WorldX;
-	int WorldY;
 	int _px;
 	int _py;
+	int _pfutx;
+	int _pfuty;
 	int _ptargx;
 	int _ptargy;
 	int _pownerx;
@@ -825,7 +825,7 @@ typedef struct TCmdChItem {
 	WORD wIndx;
 	WORD wCI;
 	int dwSeed;
-	BYTE bId;
+	BOOLEAN bId;
 } TCmdChItem;
 
 typedef struct TCmdDelItem {
@@ -1523,10 +1523,10 @@ typedef struct STextStruct {
 	int _sx;
 	int _syoff;
 	char _sstr[128];
-	int _sjust;
+	BOOL _sjust;
 	char _sclr;
 	int _sline;
-	int _ssel;
+	BOOL _ssel;
 	int _sval;
 } STextStruct;
 

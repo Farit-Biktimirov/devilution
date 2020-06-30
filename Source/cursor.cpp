@@ -5,17 +5,17 @@
  */
 #include "all.h"
 
-int cursH;
-int icursH28;
 int cursW;
+int cursH;
 int pcursmonst;
 int icursW28;
+int icursH28;
 BYTE *pCursCels;
-int icursH;
 
 /** inv_item value */
 char pcursinvitem;
 int icursW;
+int icursH;
 char pcursitem;
 char pcursobj;
 char pcursplr;
@@ -26,7 +26,8 @@ int pcurs;
 
 /* rdata */
 /** Maps from objcurs.cel frame number to frame width. */
-const int InvItemWidth[180] = {
+const int InvItemWidth[] = {
+	// clang-format off
 	// Cursors
 	0, 33, 32, 32, 32, 32, 32, 32, 32, 32, 32, 23,
 	// Items
@@ -46,11 +47,13 @@ const int InvItemWidth[180] = {
 	2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28,
 	2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28,
 	2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28,
-	2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28
+	2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28, 2 * 28,
+	// clang-format on
 };
 
 /** Maps from objcurs.cel frame number to frame height. */
-const int InvItemHeight[180] = {
+const int InvItemHeight[] = {
+	// clang-format off
 	// Cursors
 	0, 29, 32, 32, 32, 32, 32, 32, 32, 32, 32, 35,
 	// Items
@@ -70,12 +73,13 @@ const int InvItemHeight[180] = {
 	3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28,
 	3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28,
 	3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28,
-	3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28
+	3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28, 3 * 28,
+	// clang-format on
 };
 
 void InitCursor()
 {
-	/// ASSERT: assert(! pCursCels);
+	assert(!pCursCels);
 	pCursCels = LoadFileInMem("Data\\Inv\\Objcurs.CEL", NULL);
 	ClearCursor();
 }
@@ -185,14 +189,15 @@ void CheckCursMove()
 	sy = MouseY;
 
 	if (chrflag || questlog) {
-		if (sx >= 160) {
-			sx -= 160;
+		if (sx >= SCREEN_WIDTH / 4) { /// BUGFIX: (sx >= SCREEN_WIDTH / 2)
+
+			sx -= SCREEN_WIDTH / 4;
 		} else {
 			sx = 0;
 		}
 	} else if (invflag || sbookflag) {
-		if (sx <= 320) {
-			sx += 160;
+		if (sx <= SCREEN_WIDTH / 2) {
+			sx += SCREEN_WIDTH / 4;
 		} else {
 			sx = 0;
 		}
@@ -205,14 +210,15 @@ void CheckCursMove()
 		sy >>= 1;
 	}
 
+	// Adjust by player offset
 	sx -= ScrollInfo._sxoff;
 	sy -= ScrollInfo._syoff;
 
+	// Predict the next frame when walking to avoid input jitter
 	fx = plr[myplr]._pVar6 >> 8;
 	fy = plr[myplr]._pVar7 >> 8;
 	fx -= (plr[myplr]._pVar6 + plr[myplr]._pxvel) >> 8;
 	fy -= (plr[myplr]._pVar7 + plr[myplr]._pyvel) >> 8;
-
 	if (ScrollInfo._sdir != SDIR_NONE) {
 		sx -= fx;
 		sy -= fy;
@@ -231,18 +237,23 @@ void CheckCursMove()
 		sy = SCREEN_HEIGHT;
 	}
 
-	tx = sx >> 6;
-	ty = sy >> 5;
-	px = sx & 0x3F;
-	py = sy & 0x1F;
-	mx = ViewX + tx + ty - (zoomflag ? (SCREEN_WIDTH / 64) : (SCREEN_WIDTH / 2 / 64));
+	// Convert to tile grid
+
+	tx = sx >> 6; // sx / TILE_WIDTH
+	ty = sy >> 5; // sy / TILE_HEIGHT
+	px = sx & (TILE_WIDTH - 1);
+	py = sy & (TILE_HEIGHT - 1);
+
+	// Center player tile on screen
+	mx = ViewX + tx + ty - (zoomflag ? (SCREEN_WIDTH / TILE_WIDTH) : (SCREEN_WIDTH / 2 / TILE_WIDTH));
 	my = ViewY + ty - tx;
 
+	// Shift position to match diamond grid aligment
 	flipy = py < (px >> 1);
 	if (flipy) {
 		my--;
 	}
-	flipx = py >= 32 - (px >> 1);
+	flipx = py >= TILE_HEIGHT - (px >> 1);
 	if (flipx) {
 		mx++;
 	}
@@ -260,7 +271,7 @@ void CheckCursMove()
 		my = MAXDUNY - 1;
 	}
 
-	flipflag = flipy && flipx || (flipy || flipx) && px < 32;
+	flipflag = flipy && flipx || (flipy || flipx) && px < TILE_WIDTH / 2;
 
 	pcurstemp = pcursmonst;
 	pcursmonst = -1;
@@ -297,7 +308,7 @@ void CheckCursMove()
 	if (sbookflag && MouseX > RIGHT_PANEL) {
 		return;
 	}
-	if ((chrflag || questlog) && MouseX < 320) {
+	if ((chrflag || questlog) && MouseX < SPANEL_WIDTH) {
 		return;
 	}
 
@@ -488,7 +499,7 @@ void CheckCursMove()
 		}
 		if (dFlags[mx][my] & BFLAG_DEAD_PLAYER) {
 			for (i = 0; i < MAX_PLRS; i++) {
-				if (plr[i].WorldX == mx && plr[i].WorldY == my && i != myplr) {
+				if (plr[i]._px == mx && plr[i]._py == my && i != myplr) {
 					cursmx = mx;
 					cursmy = my;
 					pcursplr = i;
@@ -500,7 +511,7 @@ void CheckCursMove()
 				for (yy = -1; yy < 2; yy++) {
 					if (dFlags[mx + xx][my + yy] & BFLAG_DEAD_PLAYER) {
 						for (i = 0; i < MAX_PLRS; i++) {
-							if (plr[i].WorldX == mx + xx && plr[i].WorldY == my + yy && i != myplr) {
+							if (plr[i]._px == mx + xx && plr[i]._py == my + yy && i != myplr) {
 								cursmx = mx + xx;
 								cursmy = my + yy;
 								pcursplr = i;

@@ -7,13 +7,14 @@
 
 int qtexty;
 char *qtextptr;
-int qtextSpd;
-BOOLEAN qtextflag;
-int scrolltexty;
 int sgLastScroll;
+BOOLEAN qtextflag;
+int qtextDelay;
+int qtextSpd;
 BYTE *pMedTextCels;
 BYTE *pTextBoxCels;
 
+/** Maps from font index to medtexts.cel frame number. */
 const BYTE mfontframe[127] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -29,6 +30,11 @@ const BYTE mfontframe[127] = {
 	14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 	24, 25, 26, 48, 0, 49, 0
 };
+/**
+ * Maps from medtexts.cel frame number to character width. Note, the
+ * character width may be distinct from the frame width, which is 22 for every
+ * medtexts.cel frame.
+ */
 const BYTE mfontkern[56] = {
 	5, 15, 10, 13, 14, 10, 9, 13, 11, 5,
 	5, 11, 10, 16, 13, 16, 10, 15, 12, 10,
@@ -41,7 +47,8 @@ const BYTE mfontkern[56] = {
 /* data */
 
 /**
- * Positive numbers will delay scrolling 1 out of n frames, negative numbers will scroll 1+(-n) pixels.
+ * Text scroll speeds. Positive numbers will delay scrolling 1 out of n frames,
+ * negative numbers will scroll 1+(-n) pixels.
  */
 int qscroll_spd_tbl[9] = { 2, 4, 6, 8, 0, -1, -2, -3, -4 };
 
@@ -65,9 +72,9 @@ void InitQTextMsg(int m)
 		qtextptr = alltext[m].txtstr;
 		qtextflag = TRUE;
 		qtexty = 500;
-		sgLastScroll = qscroll_spd_tbl[alltext[m].txtspd - 1];
-		scrolltexty = sgLastScroll;
-		qtextSpd = GetTickCount();
+		qtextSpd = qscroll_spd_tbl[alltext[m].txtspd - 1];
+		qtextDelay = qtextSpd;
+		sgLastScroll = GetTickCount();
 	}
 	PlaySFX(alltext[m].sfxnr);
 }
@@ -265,17 +272,17 @@ void DrawQText()
 
 	currTime = GetTickCount();
 	while (1) {
-		if (sgLastScroll <= 0) {
+		if (qtextSpd <= 0) {
 			qtexty--;
-			qtexty += sgLastScroll;
+			qtexty += qtextSpd;
 		} else {
-			scrolltexty--;
-			if (scrolltexty != 0) {
+			qtextDelay--;
+			if (qtextDelay != 0) {
 				qtexty--;
 			}
 		}
-		if (scrolltexty == 0) {
-			scrolltexty = sgLastScroll;
+		if (qtextDelay == 0) {
+			qtextDelay = qtextSpd;
 		}
 		if (qtexty <= 209) {
 			qtexty += 38;
@@ -285,8 +292,8 @@ void DrawQText()
 			}
 			break;
 		}
-		qtextSpd += 50;
-		if (currTime - qtextSpd >= 0x7FFFFFFF) {
+		sgLastScroll += 50;
+		if (currTime - sgLastScroll >= 0x7FFFFFFF) {
 			break;
 		}
 	}
